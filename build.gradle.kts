@@ -10,6 +10,8 @@ version = "1.0-SNAPSHOT"
 
 repositories {
     maven { url = uri("https://repo.osgeo.org/repository/release/") }
+//    maven { url = uri("https://repo.mcstats.org/content/repositories/releases/") }
+//    maven { url = uri("https://libraries.minecraft.net/") }
     mavenCentral()
 }
 
@@ -17,6 +19,9 @@ val geotoolsVersion = "26.1"
 dependencies {
     testImplementation(kotlin("test"))
     implementation("org.geotools:gt-shapefile:$geotoolsVersion")
+    implementation(files("libs/J2Blocks.jar"))
+//    implementation(files("libs/minecraft-server.jar"))
+//    implementation("com.mojang:minecraft-server:1.4.4") // Where can we get this from?
 //    implementation("org.geotools:gt-geotiff:$geotoolsVersion")
 //    implementation("org.geotools:gt-geopkg:$geotoolsVersion")
 //    implementation("org.apache.commons:commons-imaging:1.0-alpha2")
