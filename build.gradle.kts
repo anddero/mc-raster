@@ -20,6 +20,7 @@ dependencies {
     testImplementation(kotlin("test"))
     implementation("org.geotools:gt-shapefile:$geotoolsVersion")
     implementation(files("libs/J2Blocks.jar"))
+    testImplementation("org.junit.jupiter:junit-jupiter:5.9.0")
 //    implementation(files("libs/minecraft-server.jar"))
 //    implementation("com.mojang:minecraft-server:1.4.4") // Where can we get this from?
 //    implementation("org.geotools:gt-geotiff:$geotoolsVersion")
