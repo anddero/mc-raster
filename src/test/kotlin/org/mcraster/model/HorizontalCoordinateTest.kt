@@ -1,6 +1,6 @@
 package org.mcraster.model
 
-import org.junit.jupiter.api.Test
+import kotlin.test.Test
 import kotlin.test.assertEquals
 
 internal class HorizontalCoordinateTest {
@@ -30,13 +30,18 @@ internal class HorizontalCoordinateTest {
         )
 
         actualValues.forEach { arr ->
-            val coord = HorizontalCoordinate(arr[0])
-            assertEquals(arr[1], coord.globalChunkValue)
-            assertEquals(arr[2], coord.regionValue)
-            assertEquals(arr[3], coord.localChunkValue)
-            assertEquals(arr[4], coord.localValue)
-            assertEquals(arr[1], arr[2] * BinaryRegion.REGION_LENGTH_CHUNKS + arr[3])
-            assertEquals(arr[0], arr[1] * BinaryChunk.CHUNK_LENGTH_BLOCKS + arr[4])
+            val coord = HorizontalCoordinate(arr.globalBlock)
+            assertEquals(
+                arr.globalBlock,
+                HorizontalCoordinate(region = arr.region, localChunk = arr.localChunk, localBlock = arr.localBlock)
+                    .globalBlock
+            )
+            assertEquals(arr.globalChunk, coord.globalChunk)
+            assertEquals(arr.region, coord.region)
+            assertEquals(arr.localChunk, coord.localChunk)
+            assertEquals(arr.localBlock, coord.localBlock)
+            assertEquals(arr.globalChunk, arr.region * BinaryRegion.REGION_LENGTH_CHUNKS + arr.localChunk)
+            assertEquals(arr.globalBlock, arr.globalChunk * BinaryChunk.CHUNK_LENGTH_BLOCKS + arr.localBlock)
         }
     }
 
@@ -63,14 +68,21 @@ internal class HorizontalCoordinateTest {
         )
 
         actualValues.forEach { arr ->
-            val coord = HorizontalCoordinate(arr[0])
-            assertEquals(arr[1], coord.globalChunkValue)
-            assertEquals(arr[2], coord.regionValue)
-            assertEquals(arr[3], coord.localChunkValue)
-            assertEquals(arr[4], coord.localValue)
-            assertEquals(arr[1], arr[2] * BinaryRegion.REGION_LENGTH_CHUNKS + arr[3])
-            assertEquals(arr[0], arr[1] * BinaryChunk.CHUNK_LENGTH_BLOCKS + arr[4])
+            val coord = HorizontalCoordinate(arr.globalBlock)
+            assertEquals(arr.globalBlock, HorizontalCoordinate(arr.region, arr.localChunk, arr.localBlock).globalBlock)
+            assertEquals(arr.globalChunk, coord.globalChunk)
+            assertEquals(arr.region, coord.region)
+            assertEquals(arr.localChunk, coord.localChunk)
+            assertEquals(arr.localBlock, coord.localBlock)
+            assertEquals(arr.globalChunk, arr.region * BinaryRegion.REGION_LENGTH_CHUNKS + arr.localChunk)
+            assertEquals(arr.globalBlock, arr.globalChunk * BinaryChunk.CHUNK_LENGTH_BLOCKS + arr.localBlock)
         }
     }
+
+    private val Array<Int>.globalBlock get() = this[0]
+    private val Array<Int>.globalChunk get() = this[1]
+    private val Array<Int>.region get() = this[2]
+    private val Array<Int>.localChunk get() = this[3]
+    private val Array<Int>.localBlock get() = this[4]
 
 }

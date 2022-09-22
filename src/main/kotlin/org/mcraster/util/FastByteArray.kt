@@ -6,7 +6,7 @@ import java.io.OutputStream
 class FastByteArray(
     private vararg val dimensions: Int,
     initialValue: Byte
-) {
+) : Iterable<Byte> {
 
     private val array = ByteArray(dimensions.reduce { a, b -> a * b })
 
@@ -18,12 +18,25 @@ class FastByteArray(
     }
 
     operator fun get(vararg indices: Int) = array[getRawIndex(indices)]
-    operator fun set(vararg indices: Int, value: Byte) {
-        array[getRawIndex(indices)] = value
+    operator fun set(vararg indices: Int, value: Byte): Boolean {
+        val rawIndex = getRawIndex(indices)
+        val current = array[rawIndex]
+        if (current == value) return false
+        array[rawIndex] = value
+        return true
     }
     fun size() = array.size
 
-    private fun getRawIndex(indices: IntArray) = indices.indices.sumOf { dimensions[it] * indices[it] }
+    override fun iterator() = array.iterator()
+
+    private fun getRawIndex(indices: IntArray): Int {
+        var index = 0
+        for (i in indices.indices) {
+            index *= dimensions[i]
+            index += indices[i]
+        }
+        return index
+    }
 
     companion object {
         fun OutputStream.write(fastByteArray: FastByteArray) = write(fastByteArray.array)

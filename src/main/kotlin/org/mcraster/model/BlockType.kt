@@ -15,6 +15,9 @@ enum class BlockType(val binaryValue: Byte) {
     companion object {
         private val BLOCK_TYPES = BlockType.values()
 
+        val MAX_BINARY_VALUE = BLOCK_TYPES.maxOf { it.binaryValue }
+        val MIN_BINARY_VALUE = BLOCK_TYPES.minOf { it.binaryValue }
+
         operator fun get(index: Byte) = BLOCK_TYPES[index.toInt()]
     }
 }
