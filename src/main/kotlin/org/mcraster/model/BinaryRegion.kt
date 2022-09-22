@@ -1,14 +1,14 @@
 package org.mcraster.model
 
-import org.mcraster.model.BinaryChunk.Companion.BLOCKS_IN_CHUNK
+import org.mcraster.model.BinaryChunk.Companion.CHUNK_SIZE_BLOCKS
 import org.mcraster.model.BinaryChunk.Companion.CHUNK_LENGTH_BLOCKS
-import org.mcraster.model.BinaryChunk.Companion.read
-import org.mcraster.model.BinaryChunk.Companion.write
+import org.mcraster.model.BinaryChunk.Companion.DISK_CHUNK_SIZE_BYTES
 import java.io.InputStream
 import java.io.OutputStream
 import java.time.Instant
 
 class BinaryRegion : Iterable<Block> {
+
     private val chunksXz = List(REGION_LENGTH_CHUNKS) { List(REGION_LENGTH_CHUNKS) { BinaryChunk() } }
     var lastAccessTime = Instant.now()
         private set
@@ -28,23 +28,23 @@ class BinaryRegion : Iterable<Block> {
     }
     override fun iterator(): Iterator<Block> = BinaryRegionIterator(this)
 
-    companion object {
+    fun write(outputStream: OutputStream) {
+        chunksXz.forEach { regionLineX -> regionLineX.forEach { chunk -> chunk.write(outputStream) } }
+        isChangedAfterCreateLoadOrSave = false
+    }
 
+    fun read(inputStream: InputStream) {
+        chunksXz.forEach { regionLineX -> regionLineX.forEach { chunk -> chunk.read(inputStream) } }
+        isChangedAfterCreateLoadOrSave = false
+    }
+
+    companion object {
         const val REGION_LENGTH_CHUNKS = 32
         const val REGION_LENGTH_BLOCKS = REGION_LENGTH_CHUNKS * CHUNK_LENGTH_BLOCKS
-        const val CHUNKS_IN_REGION = REGION_LENGTH_CHUNKS * REGION_LENGTH_CHUNKS
-        const val BLOCKS_IN_REGION = CHUNKS_IN_REGION * BLOCKS_IN_CHUNK
-
-        fun OutputStream.write(binaryRegion: BinaryRegion) {
-            binaryRegion.chunksXz.forEach { regionLineX -> regionLineX.forEach { chunk -> write(chunk) } }
-            binaryRegion.isChangedAfterCreateLoadOrSave = false
-        }
-
-        fun InputStream.read(binaryRegion: BinaryRegion) {
-            binaryRegion.chunksXz.forEach { regionLineX -> regionLineX.forEach { chunk -> read(chunk) } }
-            binaryRegion.isChangedAfterCreateLoadOrSave = false
-        }
-
+        const val REGION_SIZE_CHUNKS = REGION_LENGTH_CHUNKS * REGION_LENGTH_CHUNKS
+        const val REGION_SIZE_BLOCKS = REGION_SIZE_CHUNKS * CHUNK_SIZE_BLOCKS
+        const val DISK_REGION_SIZE_BYTES = REGION_SIZE_CHUNKS * DISK_CHUNK_SIZE_BYTES
+        const val DISK_REGION_SIZE_MB = DISK_REGION_SIZE_BYTES / 1024 / 1024
     }
 
     private class BinaryRegionIterator(region: BinaryRegion) : Iterator<Block> {

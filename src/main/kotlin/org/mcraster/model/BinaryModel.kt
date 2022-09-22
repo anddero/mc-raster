@@ -1,11 +1,7 @@
 package org.mcraster.model
 
-import org.mcraster.model.BinaryChunk.Companion.BLOCKS_IN_CHUNK
-import org.mcraster.model.BinaryChunk.Companion.BLOCK_SIZE_BYTES
-import org.mcraster.model.BinaryRegion.Companion.CHUNKS_IN_REGION
+import org.mcraster.model.BinaryRegion.Companion.DISK_REGION_SIZE_MB
 import org.mcraster.model.BinaryRegion.Companion.REGION_LENGTH_BLOCKS
-import org.mcraster.model.BinaryRegion.Companion.read
-import org.mcraster.model.BinaryRegion.Companion.write
 import org.mcraster.util.INT_WITHOUT_SIGN_MAX_STRING_LENGTH
 import org.mcraster.util.StringUtils.toFixedLengthString
 import java.io.Closeable
@@ -13,10 +9,9 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 
-class BinaryModel(dirName: String) : Closeable, Iterable<Block> {
+class BinaryModel(private val directory: File) : Closeable, Iterable<Block> {
 
     private val loadedRegionsByRegionXz = mutableMapOf<Pair<Int, Int>, BinaryRegion>()
-    private val directory = File(dirName)
     private var regionFileReadCount = 0
     private var regionFileWriteCount = 0
 
@@ -42,9 +37,8 @@ class BinaryModel(dirName: String) : Closeable, Iterable<Block> {
     override fun iterator(): Iterator<Block> = BinaryModelIterator(this)
 
     companion object {
-        private val REGION_SIZE_MB = CHUNKS_IN_REGION * BLOCKS_IN_CHUNK * BLOCK_SIZE_BYTES / 1024 / 1024
         private val MAX_CACHE_SIZE_MB = 4096
-        private val MAX_CACHE_SIZE_REGIONS = MAX_CACHE_SIZE_MB / REGION_SIZE_MB
+        private val MAX_CACHE_SIZE_REGIONS = MAX_CACHE_SIZE_MB / DISK_REGION_SIZE_MB
     }
 
     private fun getRegion(regionX: Int, regionZ: Int) =
@@ -56,7 +50,7 @@ class BinaryModel(dirName: String) : Closeable, Iterable<Block> {
         val newBinaryRegion = BinaryRegion()
         if (regionFile.exists()) {
             if (regionFile.isFile) {
-                FileInputStream(regionFile).use { it.read(newBinaryRegion) }
+                FileInputStream(regionFile).use { newBinaryRegion.read(it) }
                 ++regionFileReadCount
             } else throw RuntimeException("Cannot read region file: " + regionFile.absolutePath)
         }
@@ -81,7 +75,7 @@ class BinaryModel(dirName: String) : Closeable, Iterable<Block> {
     private fun writeRegionFileIfUnsaved(regionX: Int, regionZ: Int, region: BinaryRegion) {
         if (region.isChangedAfterCreateLoadOrSave) {
             val regionFile = File(directory, getRegionFileName(regionX = regionX, regionZ = regionZ))
-            FileOutputStream(regionFile, false).use { it.write(region) }
+            FileOutputStream(regionFile, false).use { region.write(it) }
             ++regionFileWriteCount
         }
     }

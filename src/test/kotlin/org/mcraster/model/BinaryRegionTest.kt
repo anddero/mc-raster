@@ -1,5 +1,7 @@
 package org.mcraster.model
 
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import kotlin.random.Random
@@ -67,14 +69,42 @@ internal class BinaryRegionTest {
     }
 
     @Test
+    fun `reading and writing to stream works`() {
+        // Expecting one region file to be exactly 64 MB. If block/chunk/region sizes change, update this test.
+        assertEquals(64 * 1024 * 1024, BinaryRegion.DISK_REGION_SIZE_BYTES)
+
+        val savedRegion = BinaryRegion()
+        val loadedRegion = BinaryRegion()
+
+        for (x in 0 until BinaryRegion.REGION_LENGTH_BLOCKS) {
+            for (z in 0 until BinaryRegion.REGION_LENGTH_BLOCKS) {
+                for (y in 0 until BinaryChunk.CHUNK_HEIGHT_BLOCKS) {
+                    savedRegion.set(x = hCo(x), z = hCo(z), y = y, value = Random.nextBlock())
+                }
+            }
+        }
+
+        with(ByteArrayOutputStream(BinaryRegion.DISK_REGION_SIZE_BYTES)) {
+            savedRegion.write(this)
+            loadedRegion.read(ByteArrayInputStream(toByteArray()))
+        }
+
+        val savedRegionIterator = savedRegion.iterator()
+        val loadedRegionIterator = loadedRegion.iterator()
+
+        repeat(BinaryRegion.REGION_SIZE_BLOCKS) {
+            assertEquals(savedRegionIterator.next(), loadedRegionIterator.next())
+        }
+    }
+
+    @Test
     fun `iterator iterates chunk-by-chunk returning all chunks of the same Z first before increasing X`() {
         val region = BinaryRegion()
 
         // create a list of random blocks to use for validation (only create as many values as needed)
-        val totalBlocksToCheck = BinaryChunk.BLOCKS_IN_CHUNK * 4 // generating for a 2x2 region only
+        val totalBlocksToCheck = BinaryChunk.CHUNK_SIZE_BLOCKS * 4 // generating for a 2x2 region only
         val randomBlockValues = (0 until totalBlocksToCheck)
-            .map { Random.nextInt(BlockType.MIN_BINARY_VALUE.toInt(), BlockType.MAX_BINARY_VALUE + 1) }
-            .map { it.toByte() }
+            .map { Random.nextBlock().binaryValue }
             .toByteArray()
 
         // apply random blocks to a chosen area of chunks (2 x 2), keeping everything around them empty
@@ -125,15 +155,18 @@ internal class BinaryRegionTest {
     }
 
     private fun assertSetBytes(expectedValuesIterator: ByteIterator, regionIterator: Iterator<Block>) {
-        repeat(BinaryChunk.BLOCKS_IN_CHUNK) {
+        repeat(BinaryChunk.CHUNK_SIZE_BLOCKS) {
             assertEquals(expectedValuesIterator.next(), regionIterator.next().type.binaryValue)
         }
     }
 
     private fun assertEmptyChunk(regionIterator: Iterator<Block>) {
-        repeat(BinaryChunk.BLOCKS_IN_CHUNK) { assertEquals(BlockType.NONE, regionIterator.next().type) }
+        repeat(BinaryChunk.CHUNK_SIZE_BLOCKS) { assertEquals(BlockType.NONE, regionIterator.next().type) }
     }
 
     private fun hCo(i: Int) = HorizontalCoordinate(i)
+
+    private fun Random.nextBlock() =
+        BlockType[nextInt(BlockType.MIN_BINARY_VALUE.toInt(), BlockType.MAX_BINARY_VALUE + 1).toByte()]
 
 }

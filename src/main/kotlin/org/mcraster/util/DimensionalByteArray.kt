@@ -29,6 +29,15 @@ open class DimensionalByteArray(
 
     override fun iterator() = array.iterator()
 
+    fun read(inputStream: InputStream) {
+        val n = inputStream.read(array)
+        if (n != size()) {
+            throw RuntimeException("Failed to read ${javaClass.simpleName} fully from stream, read $n bytes")
+        }
+    }
+
+    fun write(outputStream: OutputStream) = outputStream.write(array)
+
     private fun getRawIndex(indices: IntArray): Int {
         var index = 0
         for (i in indices.indices) {
@@ -36,11 +45,6 @@ open class DimensionalByteArray(
             index += indices[i]
         }
         return index
-    }
-
-    companion object {
-        fun OutputStream.write(dimensionalByteArray: DimensionalByteArray) = write(dimensionalByteArray.array)
-        fun InputStream.read(dimensionalByteArray: DimensionalByteArray) = read(dimensionalByteArray.array)
     }
 
 }
