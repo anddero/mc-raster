@@ -2,8 +2,8 @@ package org.mcraster.model
 
 import org.mcraster.model.BlockType.NONE
 import org.mcraster.util.ByteVec3
-import org.mcraster.util.ByteVec3.Companion.read
-import org.mcraster.util.ByteVec3.Companion.write
+import org.mcraster.util.DimensionalByteArray.Companion.read
+import org.mcraster.util.DimensionalByteArray.Companion.write
 import java.io.InputStream
 import java.io.OutputStream
 

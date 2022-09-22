@@ -3,7 +3,7 @@ package org.mcraster.util
 import java.io.InputStream
 import java.io.OutputStream
 
-class FastByteArray(
+open class DimensionalByteArray(
     private vararg val dimensions: Int,
     initialValue: Byte
 ) : Iterable<Byte> {
@@ -39,8 +39,8 @@ class FastByteArray(
     }
 
     companion object {
-        fun OutputStream.write(fastByteArray: FastByteArray) = write(fastByteArray.array)
-        fun InputStream.read(fastByteArray: FastByteArray) = read(fastByteArray.array)
+        fun OutputStream.write(dimensionalByteArray: DimensionalByteArray) = write(dimensionalByteArray.array)
+        fun InputStream.read(dimensionalByteArray: DimensionalByteArray) = read(dimensionalByteArray.array)
     }
 
 }

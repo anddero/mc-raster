@@ -4,16 +4,15 @@ import org.mcraster.model.BinaryChunk.Companion.BLOCKS_IN_CHUNK
 import org.mcraster.model.BinaryChunk.Companion.CHUNK_LENGTH_BLOCKS
 import org.mcraster.model.BinaryChunk.Companion.read
 import org.mcraster.model.BinaryChunk.Companion.write
-import java.io.File
-import java.io.FileInputStream
-import java.io.FileOutputStream
+import java.io.InputStream
+import java.io.OutputStream
 import java.time.Instant
 
 class BinaryRegion : Iterable<Block> {
     private val chunksXz = List(REGION_LENGTH_CHUNKS) { List(REGION_LENGTH_CHUNKS) { BinaryChunk() } }
     var lastAccessTime = Instant.now()
         private set
-    var isChanged = false
+    var isChangedAfterCreateLoadOrSave = false
         private set
 
     operator fun get(x: HorizontalCoordinate, z: HorizontalCoordinate, y: Int): BlockType {
@@ -25,7 +24,7 @@ class BinaryRegion : Iterable<Block> {
         lastAccessTime = Instant.now()
         val changed = chunksXz[x.localChunk][z.localChunk]
             .set(localX = x.localBlock, localZ = z.localBlock, y = y, value = value)
-        if (changed) this.isChanged = true
+        if (changed) this.isChangedAfterCreateLoadOrSave = true
     }
     override fun iterator(): Iterator<Block> = BinaryRegionIterator(this)
 
@@ -36,20 +35,14 @@ class BinaryRegion : Iterable<Block> {
         const val CHUNKS_IN_REGION = REGION_LENGTH_CHUNKS * REGION_LENGTH_CHUNKS
         const val BLOCKS_IN_REGION = CHUNKS_IN_REGION * BLOCKS_IN_CHUNK
 
-        /**
-         * Writes a new region file or overwrites the existing one.
-         */
-        fun File.write(binaryRegion: BinaryRegion) {
-            FileOutputStream(this, false).use { stream ->
-                binaryRegion.chunksXz.forEach { regionLineX -> regionLineX.forEach { chunk -> stream.write(chunk) } }
-            }
+        fun OutputStream.write(binaryRegion: BinaryRegion) {
+            binaryRegion.chunksXz.forEach { regionLineX -> regionLineX.forEach { chunk -> write(chunk) } }
+            binaryRegion.isChangedAfterCreateLoadOrSave = false
         }
 
-        fun File.read(binaryRegion: BinaryRegion) {
-            FileInputStream(this).use { stream ->
-                binaryRegion.chunksXz.forEach { regionLineX -> regionLineX.forEach { chunk -> stream.read(chunk) } }
-            }
-            binaryRegion.isChanged = false
+        fun InputStream.read(binaryRegion: BinaryRegion) {
+            binaryRegion.chunksXz.forEach { regionLineX -> regionLineX.forEach { chunk -> read(chunk) } }
+            binaryRegion.isChangedAfterCreateLoadOrSave = false
         }
 
     }

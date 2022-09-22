@@ -10,6 +10,8 @@ import org.mcraster.util.INT_WITHOUT_SIGN_MAX_STRING_LENGTH
 import org.mcraster.util.StringUtils.toFixedLengthString
 import java.io.Closeable
 import java.io.File
+import java.io.FileInputStream
+import java.io.FileOutputStream
 
 class BinaryModel(dirName: String) : Closeable, Iterable<Block> {
 
@@ -54,7 +56,7 @@ class BinaryModel(dirName: String) : Closeable, Iterable<Block> {
         val newBinaryRegion = BinaryRegion()
         if (regionFile.exists()) {
             if (regionFile.isFile) {
-                regionFile.read(newBinaryRegion)
+                FileInputStream(regionFile).use { it.read(newBinaryRegion) }
                 ++regionFileReadCount
             } else throw RuntimeException("Cannot read region file: " + regionFile.absolutePath)
         }
@@ -77,9 +79,9 @@ class BinaryModel(dirName: String) : Closeable, Iterable<Block> {
     }
 
     private fun writeRegionFileIfUnsaved(regionX: Int, regionZ: Int, region: BinaryRegion) {
-        if (region.isChanged) {
+        if (region.isChangedAfterCreateLoadOrSave) {
             val regionFile = File(directory, getRegionFileName(regionX = regionX, regionZ = regionZ))
-            regionFile.write(region)
+            FileOutputStream(regionFile, false).use { it.write(region) }
             ++regionFileWriteCount
         }
     }

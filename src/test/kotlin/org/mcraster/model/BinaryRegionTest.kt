@@ -45,16 +45,16 @@ internal class BinaryRegionTest {
     @Test
     fun `isChanged returns true only if it was changed`() {
         val region = BinaryRegion()
-        assertFalse(region.isChanged)
+        assertFalse(region.isChangedAfterCreateLoadOrSave)
 
         region[HorizontalCoordinate(12), HorizontalCoordinate(34), 4]
-        assertFalse(region.isChanged)
+        assertFalse(region.isChangedAfterCreateLoadOrSave)
 
         region[HorizontalCoordinate(132), HorizontalCoordinate(3214), 4] = BlockType.NONE
-        assertFalse(region.isChanged)
+        assertFalse(region.isChangedAfterCreateLoadOrSave)
 
         region[HorizontalCoordinate(123), HorizontalCoordinate(234), 1] = BlockType.WATER
-        assertTrue(region.isChanged)
+        assertTrue(region.isChangedAfterCreateLoadOrSave)
     }
 
     @Test
