@@ -30,7 +30,7 @@ open class DimensionalByteArray(
     override fun iterator() = array.iterator()
 
     fun read(inputStream: InputStream) {
-        val n = inputStream.read(array)
+        val n = inputStream.readNBytes(array, 0, size())
         if (n != size()) {
             throw RuntimeException("Failed to read ${javaClass.simpleName} fully from stream, read $n bytes")
         }

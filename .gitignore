@@ -3,4 +3,5 @@
 /build/
 /worlds/
 /local-data/
-/src/main/resources/customArea*
+/input-resources/
+/output-models/

@@ -8,4 +8,7 @@ class PointLEst97(val x: Double, val y: Double, val h: Double) {
 
     fun getBoundingBlock() = BlockPosLEst97.fromPointOnBlock(x = x, y = y, h = h)
 
+    fun getBoundingHorizontallyButVerticallyRoundedTowardsTopOfBlock() =
+        BlockPosLEst97.fromPointOnBlockWithClosestRealisticHeight(x = x, y = y, h = h)
+
 }

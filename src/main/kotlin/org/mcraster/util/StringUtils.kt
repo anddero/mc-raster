@@ -10,4 +10,6 @@ object StringUtils {
         return sign + withoutSign.padStart(INT_WITHOUT_SIGN_MAX_STRING_LENGTH, '0')
     }
 
+    const val intFixedLengthRegex = "[-+]\\d{$INT_WITHOUT_SIGN_MAX_STRING_LENGTH}"
+
 }

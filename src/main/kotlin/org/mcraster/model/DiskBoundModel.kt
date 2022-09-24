@@ -2,11 +2,13 @@ package org.mcraster.model
 
 import org.mcraster.model.Limits.MAX_CACHE_SIZE_REGIONS
 import org.mcraster.model.Limits.REGION_LENGTH_BLOCKS
-import org.mcraster.util.INT_WITHOUT_SIGN_MAX_STRING_LENGTH
+import org.mcraster.util.StringUtils.intFixedLengthRegex
 import org.mcraster.util.StringUtils.toFixedLengthString
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.util.zip.GZIPInputStream
+import java.util.zip.GZIPOutputStream
 
 /**
  * Represents a disk directory containing several files holding portions of model data.
@@ -25,6 +27,12 @@ class DiskBoundModel(private val directory: File) : Iterable<Block> {
     private var regionFileReadCount = 0
     private var regionFileWriteCount = 0
 
+    init {
+        if (directory.exists()) {
+            if (!directory.isDirectory) throw RuntimeException("Not a directory: $directory")
+        } else if (!directory.mkdirs()) throw RuntimeException("Failed to create directory: $directory")
+    }
+
     operator fun get(pos: BlockPos): BlockType {
         val xCoord = HorizontalCoordinate(pos.x)
         val zCoord = HorizontalCoordinate(pos.z)
@@ -42,9 +50,11 @@ class DiskBoundModel(private val directory: File) : Iterable<Block> {
      * Save all unsaved changes to disk that have been made so far.
      */
     fun flush() {
+        println("Before flush: total region reads $regionFileReadCount and writes $regionFileWriteCount")
         loadedRegionsByRegionXz.forEach { xzregion ->
             writeRegionFileIfUnsaved(xzregion.key.first, xzregion.key.second, xzregion.value)
         }
+        println("After flush: total region reads $regionFileReadCount and writes $regionFileWriteCount")
     }
 
     override fun iterator(): Iterator<Block> = BinaryModelIterator(this)
@@ -58,8 +68,7 @@ class DiskBoundModel(private val directory: File) : Iterable<Block> {
         val newRegion = Region()
         if (regionFile.exists()) {
             if (regionFile.isFile) {
-                FileInputStream(regionFile).use { newRegion.read(it) }
-                ++regionFileReadCount
+                readCompressedRegionFile(regionFile = regionFile, destRegion = newRegion)
             } else throw RuntimeException("Cannot read region file: " + regionFile.absolutePath)
         }
         loadedRegionsByRegionXz[Pair(regionX, regionZ)] = newRegion
@@ -74,29 +83,41 @@ class DiskBoundModel(private val directory: File) : Iterable<Block> {
         }
     }
 
-    private fun getRegionFileName(regionX: Int, regionZ: Int): String {
-        val xString = regionX.toFixedLengthString()
-        val zString = regionZ.toFixedLengthString()
-        return "R_${xString}_$zString.bin"
-    }
-
     private fun writeRegionFileIfUnsaved(regionX: Int, regionZ: Int, region: Region) {
         if (region.isChangedAfterCreateLoadOrSave) {
-            val regionFile = File(directory, getRegionFileName(regionX = regionX, regionZ = regionZ))
-            FileOutputStream(regionFile, false).use { region.write(it) }
-            ++regionFileWriteCount
+            writeCompressedRegionFile(
+                regionFile = File(directory, getRegionFileName(regionX = regionX, regionZ = regionZ)),
+                srcRegion = region
+            )
         }
     }
 
+    private fun readCompressedRegionFile(regionFile: File, destRegion: Region) {
+        FileInputStream(regionFile).use { fileInputStream ->
+            GZIPInputStream(fileInputStream).use { destRegion.read(it) }
+        }
+        ++regionFileReadCount
+    }
+
+    private fun writeCompressedRegionFile(regionFile: File, srcRegion: Region) {
+        FileOutputStream(regionFile, false).use { fileOutputStream ->
+            GZIPOutputStream(fileOutputStream).use { srcRegion.write(it) }
+        }
+        ++regionFileWriteCount
+    }
+
     private fun getRegionsXz(): Set<Pair<Int, Int>> {
-        val regionsXz = loadedRegionsByRegionXz.keys
+        val regionsXz = loadedRegionsByRegionXz.keys.toMutableSet()
         val regionFileNames = directory.list() ?: throw RuntimeException("Failed to list region files in model dir")
         regionFileNames.forEach { fileName ->
-            val numberRegex = "[-+]\\d{$INT_WITHOUT_SIGN_MAX_STRING_LENGTH}"
-            val matcher = "^R($numberRegex)($numberRegex)\\.dat\$".toRegex()
-            val xz = matcher.matchEntire(fileName)!!.groupValues
-                .let { Pair(it[1].toInt(), it[2].toInt()) }
-            regionsXz.add(xz)
+            val match = regionFileNameRegex.matchEntire(fileName)
+            if (match != null) {
+                match.groupValues
+                    .let { Pair(it[1].toInt(), it[2].toInt()) }
+                    .let { regionsXz.add(it) }
+            } else {
+                System.err.println("Ignoring unrecognized file in model directory: $fileName")
+            }
         }
         return regionsXz.toSet()
     }
@@ -140,6 +161,15 @@ class DiskBoundModel(private val directory: File) : Iterable<Block> {
             )
         }
 
+    }
+
+    companion object {
+        private fun getRegionFileName(regionX: Int, regionZ: Int): String {
+            val xString = regionX.toFixedLengthString()
+            val zString = regionZ.toFixedLengthString()
+            return "R${xString}$zString.dat"
+        }
+        private val regionFileNameRegex = "^R(${intFixedLengthRegex})(${intFixedLengthRegex})\\.dat\$".toRegex()
     }
 
 }

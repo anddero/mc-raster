@@ -4,7 +4,6 @@ import org.mcraster.model.BlockPos
 import org.mcraster.model.Limits.isWithinLimits
 import org.mcraster.reader.Lest97Reader.linesLest97YxhDouble
 import org.mcraster.util.DataSource
-import org.mcraster.util.FileUtils
 import java.io.File
 
 class DataSourceDescriptor(
@@ -18,8 +17,8 @@ class DataSourceDescriptor(
 ) {
 
     fun asDataSource(): DataSource<BlockPos> {
-        val source: File = when(type) {
-            DataSourceType.RESOURCE_FILE -> FileUtils.getResource(path)
+        val source: File = when (type) {
+            DataSourceType.RELATIVE_FILE -> File(path)
         }
         var data: DataSource<BlockPos> = when(format) {
             DataFormat.LINES_LEST97_YXH_DOUBLE ->
@@ -33,7 +32,7 @@ class DataSourceDescriptor(
     }
 
     enum class DataSourceType {
-        RESOURCE_FILE
+        RELATIVE_FILE
     }
 
     enum class DataFormat {
@@ -41,7 +40,8 @@ class DataSourceDescriptor(
     }
 
     enum class PointConversionStrategy {
-        BOUNDING_BLOCK
+        BOUNDING_BLOCK,
+        BOUNDING_HORIZONTALLY_BUT_VERTICALLY_ROUNDED_TOWARDS_TOP_OF_BLOCK
     }
 
     companion object {

@@ -47,7 +47,7 @@ object DiskBoundModelBuilder {
         heightMap.use { highestBlocks ->
             highestBlocks.forEach { highestBlock ->
                 this[BlockPos(x = highestBlock.x, y = 0, z = highestBlock.z)] = BlockType.UNBREAKABLE_STONE
-                for (y in 1 until highestBlock.y) {
+                for (y in 1 .. highestBlock.y) {
                     this[BlockPos(x = highestBlock.x, y = y, z = highestBlock.z)] = BlockType.SOIL
                 }
             }
@@ -58,7 +58,7 @@ object DiskBoundModelBuilder {
         markerPoles.use { highestBlocks ->
             highestBlocks.forEach { highestBlock ->
                 this[BlockPos(x = highestBlock.x, y = 0, z = highestBlock.z)] = BlockType.UNBREAKABLE_STONE
-                for (y in 1 until highestBlock.y) {
+                for (y in 1 .. highestBlock.y) {
                     this[BlockPos(x = highestBlock.x, y = y, z = highestBlock.z)] = BlockType.STONE
                 }
             }
