@@ -36,7 +36,7 @@ internal class HorizontalCoordinateTest {
             assertEquals(
                 arr.globalBlock,
                 HorizontalCoordinate(region = arr.region, localChunk = arr.localChunk, localBlock = arr.localBlock)
-                    .globalBlock
+                    .global
             )
             assertEquals(arr.globalChunk, coord.globalChunk)
             assertEquals(arr.region, coord.region)
@@ -71,7 +71,7 @@ internal class HorizontalCoordinateTest {
 
         actualValues.forEach { arr ->
             val coord = HorizontalCoordinate(arr.globalBlock)
-            assertEquals(arr.globalBlock, HorizontalCoordinate(arr.region, arr.localChunk, arr.localBlock).globalBlock)
+            assertEquals(arr.globalBlock, HorizontalCoordinate(arr.region, arr.localChunk, arr.localBlock).global)
             assertEquals(arr.globalChunk, coord.globalChunk)
             assertEquals(arr.region, coord.region)
             assertEquals(arr.localChunk, coord.localChunk)
