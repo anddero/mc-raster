@@ -1,5 +1,6 @@
 package org.mcraster.model
 
+import org.mcraster.model.Block.RegionLocalBlock
 import org.mcraster.model.Limits.MODEL_HEIGHT_BLOCKS
 import org.mcraster.model.Limits.CHUNK_LENGTH_BLOCKS
 import org.mcraster.model.Limits.CHUNK_SIZE_BLOCKS
@@ -38,7 +39,7 @@ internal class RegionTest {
         timePassedMs = region.lastAccessTime.until(Instant.now(), ChronoUnit.MILLIS)
         assertTrue(timePassedMs in 1000 .. 1100)
 
-        region[HorizontalCoordinate(123), HorizontalCoordinate(234), 1] = BlockType.WATER
+        region.setBlock(BlockPos(x = 123, z = 234, y = 1), BlockType.WATER)
         timePassedMs = region.lastAccessTime.until(Instant.now(), ChronoUnit.MILLIS)
         assertTrue(timePassedMs in 0 .. 100)
 
@@ -46,7 +47,7 @@ internal class RegionTest {
         timePassedMs = region.lastAccessTime.until(Instant.now(), ChronoUnit.MILLIS)
         assertTrue(timePassedMs in 2000..2200)
 
-        region[HorizontalCoordinate(12), HorizontalCoordinate(34), 4]
+        region.getBlock(BlockPos(x = 12, z = 34, y = 4))
         timePassedMs = region.lastAccessTime.until(Instant.now(), ChronoUnit.MILLIS)
         assertTrue(timePassedMs in 0 .. 100)
     }
@@ -56,23 +57,33 @@ internal class RegionTest {
         val region = Region()
         assertFalse(region.isChangedAfterCreateLoadOrSave)
 
-        region[HorizontalCoordinate(12), HorizontalCoordinate(34), 4]
+        region.getBlock(BlockPos(x = 12, z = 34, y = 4))
         assertFalse(region.isChangedAfterCreateLoadOrSave)
 
-        region[HorizontalCoordinate(132), HorizontalCoordinate(3214), 4] = BlockType.NONE
+        region.setBlock(BlockPos(x = 132, z = 3214, y = 4), BlockType.NONE)
         assertFalse(region.isChangedAfterCreateLoadOrSave)
 
-        region[HorizontalCoordinate(123), HorizontalCoordinate(234), 1] = BlockType.WATER
+        region.setBlock(BlockPos(x = 123, z = 234, y = 1), BlockType.WATER)
         assertTrue(region.isChangedAfterCreateLoadOrSave)
     }
 
     @Test
     fun `get and set work on the same element`() {
         val region = Region()
-        region[hCo(0), hCo(0), 1] = BlockType.SOIL_WITH_GRASS
-        assertEquals(BlockType.SOIL_WITH_GRASS, region[hCo(0), hCo(0), 1])
-        region[hCo(231), hCo(49382), 52] = BlockType.GRAVEL
-        assertEquals(BlockType.GRAVEL, region[hCo(231), hCo(49382), 52])
+        region.setBlock(
+            BlockPos(x = 0, z = 0, y = 1),
+            BlockType.SOIL_WITH_GRASS
+        )
+        assertEquals(BlockType.SOIL_WITH_GRASS,
+            region.getBlock(BlockPos(x = 0, z = 0, y = 1))
+        )
+        region.setBlock(
+            BlockPos(x = 231, z = 49382, y = 52),
+            BlockType.GRAVEL
+        )
+        assertEquals(BlockType.GRAVEL,
+            region.getBlock(BlockPos(x = 231, z = 49382, y = 52))
+        )
     }
 
     @Test
@@ -86,7 +97,10 @@ internal class RegionTest {
         for (x in 0 until REGION_LENGTH_BLOCKS) {
             for (z in 0 until REGION_LENGTH_BLOCKS) {
                 for (y in 0 until MODEL_HEIGHT_BLOCKS) {
-                    savedRegion.set(x = hCo(x), z = hCo(z), y = y, value = Random.nextBlock())
+                    savedRegion.setBlock(
+                        pos = BlockPos(x = x, z = z, y = y),
+                        value = Random.nextBlock()
+                    )
                 }
             }
         }
@@ -121,10 +135,10 @@ internal class RegionTest {
                     for (localX in 0 until CHUNK_LENGTH_BLOCKS) {
                         for (localZ in 0 until CHUNK_LENGTH_BLOCKS) {
                             for (y in 0 until MODEL_HEIGHT_BLOCKS) {
-                                region.set(
-                                    x = HorizontalCoordinate(0, chunkX, localX),
-                                    z = HorizontalCoordinate(0, chunkZ, localZ),
-                                    y = y,
+                                val x = HorPos(0, chunkX, localX)
+                                val z = HorPos(0, chunkZ, localZ)
+                                region.setBlock(
+                                    pos = BlockPos(x = x.block, z = z.block, y = y),
                                     value = BlockType[next()]
                                 )
                             }
@@ -161,17 +175,15 @@ internal class RegionTest {
         assertFalse(expectedValuesIterator.hasNext())
     }
 
-    private fun assertSetBytes(expectedValuesIterator: ByteIterator, regionIterator: Iterator<Block>) {
+    private fun assertSetBytes(expectedValuesIterator: ByteIterator, regionIterator: Iterator<RegionLocalBlock>) {
         repeat(CHUNK_SIZE_BLOCKS) {
             assertEquals(expectedValuesIterator.next(), regionIterator.next().type.value)
         }
     }
 
-    private fun assertEmptyChunk(regionIterator: Iterator<Block>) {
+    private fun assertEmptyChunk(regionIterator: Iterator<RegionLocalBlock>) {
         repeat(CHUNK_SIZE_BLOCKS) { assertEquals(BlockType.NONE, regionIterator.next().type) }
     }
-
-    private fun hCo(i: Int) = HorizontalCoordinate(i)
 
     private fun Random.nextBlock() =
         BlockType[nextInt(BlockType.MIN_BINARY_VALUE.toInt(), BlockType.MAX_BINARY_VALUE + 1).toByte()]

@@ -1,7 +1,10 @@
 package org.mcraster.model
 
-import org.mcraster.model.Limits.MAX_CACHE_SIZE_REGIONS
-import org.mcraster.model.Limits.REGION_LENGTH_BLOCKS
+import org.mcraster.model.Block.RegionLocalBlock
+import org.mcraster.model.DiskBoundModel.RegionIndex.Companion.regionIndex
+import org.mcraster.model.Limits.DEFAULT_MAX_CACHE_SIZE_MB
+import org.mcraster.model.Limits.DISK_REGION_SIZE_MB_APPROX
+import org.mcraster.util.CachedMap
 import org.mcraster.util.StringUtils.intFixedLengthRegex
 import org.mcraster.util.StringUtils.toFixedLengthString
 import java.io.File
@@ -23,9 +26,16 @@ import java.util.zip.GZIPOutputStream
  */
 class DiskBoundModel(private val directory: File) : Iterable<Block> {
 
-    private val loadedRegionsByRegionXz = mutableMapOf<Pair<Int, Int>, Region>()
-    private var regionFileReadCount = 0
-    private var regionFileWriteCount = 0
+    private val regionsByIndex = object : CachedMap<RegionIndex, Region>(DEFAULT_MAX_CACHE_SIZE_MB) {
+        override fun getCacheLineSizeMB() = DISK_REGION_SIZE_MB_APPROX
+
+        override fun Map.Entry<RegionIndex, Region>.isOlderThan(otherCacheLine: Map.Entry<RegionIndex, Region>) =
+            this.value.lastAccessTime.isBefore(otherCacheLine.value.lastAccessTime)
+
+        override fun load(key: RegionIndex) = loadRegionFileFromDisk(key)
+
+        override fun onDrop(entry: Map.Entry<RegionIndex, Region>) = ensureRegionFileSavedToDisk(entry.key, entry.value)
+    }
 
     init {
         if (directory.exists()) {
@@ -33,141 +43,105 @@ class DiskBoundModel(private val directory: File) : Iterable<Block> {
         } else if (!directory.mkdirs()) throw RuntimeException("Failed to create directory: $directory")
     }
 
-    operator fun get(pos: BlockPos): BlockType {
-        val xCoord = HorizontalCoordinate(pos.x)
-        val zCoord = HorizontalCoordinate(pos.z)
-        return getRegion(regionX = xCoord.region, regionZ = zCoord.region).get(x = xCoord, z = zCoord, y = pos.y)
-    }
+    var maxCacheSizeMB: Int by regionsByIndex::maxCacheSizeMB
 
-    operator fun set(pos: BlockPos, block: BlockType) {
-        val xCoord = HorizontalCoordinate(pos.x)
-        val zCoord = HorizontalCoordinate(pos.z)
-        return getRegion(regionX = xCoord.region, regionZ = zCoord.region)
-            .set(x = xCoord, z = zCoord, y = pos.y, value = block)
-    }
+    fun getBlock(pos: BlockPos) = regionsByIndex[pos.regionIndex].getBlock(pos = pos)
+
+    fun setBlock(pos: BlockPos, block: BlockType) =
+        regionsByIndex[pos.regionIndex].setBlock(pos = pos, value = block)
 
     /**
      * Save all unsaved changes to disk that have been made so far.
      */
-    fun flush() {
-        println("Before flush: total region reads $regionFileReadCount and writes $regionFileWriteCount")
-        loadedRegionsByRegionXz.forEach { xzregion ->
-            writeRegionFileIfUnsaved(xzregion.key.first, xzregion.key.second, xzregion.value)
-        }
-        println("After flush: total region reads $regionFileReadCount and writes $regionFileWriteCount")
-    }
+    fun flush() =
+        regionsByIndex.forEachCacheLine { ensureRegionFileSavedToDisk(regionIndex = it.key, region = it.value) }
 
     override fun iterator(): Iterator<Block> = BinaryModelIterator(this)
 
-    private fun getRegion(regionX: Int, regionZ: Int) =
-        loadedRegionsByRegionXz[Pair(regionX, regionZ)] ?: loadRegionFromFile(regionX, regionZ)
-
-    private fun loadRegionFromFile(regionX: Int, regionZ: Int): Region {
-        reduceCacheIfRequired()
-        val regionFile = File(directory, getRegionFileName(regionX = regionX, regionZ = regionZ))
-        val newRegion = Region()
-        if (regionFile.exists()) {
-            if (regionFile.isFile) {
-                readCompressedRegionFile(regionFile = regionFile, destRegion = newRegion)
-            } else throw RuntimeException("Cannot read region file: " + regionFile.absolutePath)
-        }
-        loadedRegionsByRegionXz[Pair(regionX, regionZ)] = newRegion
-        return newRegion
-    }
-
-    private fun reduceCacheIfRequired() {
-        while (loadedRegionsByRegionXz.size >= MAX_CACHE_SIZE_REGIONS) {
-            val (xz, regionToRemove) = loadedRegionsByRegionXz.minByOrNull { it.value.lastAccessTime }!!
-            loadedRegionsByRegionXz.remove(xz)
-            writeRegionFileIfUnsaved(xz.first, xz.second, regionToRemove)
-        }
-    }
-
-    private fun writeRegionFileIfUnsaved(regionX: Int, regionZ: Int, region: Region) {
-        if (region.isChangedAfterCreateLoadOrSave) {
-            writeCompressedRegionFile(
-                regionFile = File(directory, getRegionFileName(regionX = regionX, regionZ = regionZ)),
-                srcRegion = region
-            )
-        }
-    }
-
-    private fun readCompressedRegionFile(regionFile: File, destRegion: Region) {
-        FileInputStream(regionFile).use { fileInputStream ->
-            GZIPInputStream(fileInputStream).use { destRegion.read(it) }
-        }
-        ++regionFileReadCount
-    }
-
-    private fun writeCompressedRegionFile(regionFile: File, srcRegion: Region) {
-        FileOutputStream(regionFile, false).use { fileOutputStream ->
-            GZIPOutputStream(fileOutputStream).use { srcRegion.write(it) }
-        }
-        ++regionFileWriteCount
-    }
-
-    private fun getRegionsXz(): Set<Pair<Int, Int>> {
-        val regionsXz = loadedRegionsByRegionXz.keys.toMutableSet()
+    private fun getAllModelRegionIndices(): Set<RegionIndex> {
+        val regionIndices = regionsByIndex.getCacheLineKeys().toMutableSet()
         val regionFileNames = directory.list() ?: throw RuntimeException("Failed to list region files in model dir")
         regionFileNames.forEach { fileName ->
             val match = regionFileNameRegex.matchEntire(fileName)
             if (match != null) {
                 match.groupValues
-                    .let { Pair(it[1].toInt(), it[2].toInt()) }
-                    .let { regionsXz.add(it) }
+                    .let { RegionIndex(x = it[1].toInt(), z = it[2].toInt()) }
+                    .let { regionIndices.add(it) }
             } else {
                 System.err.println("Ignoring unrecognized file in model directory: $fileName")
             }
         }
-        return regionsXz.toSet()
+        return regionIndices.toSet()
+    }
+
+    private fun loadRegionFileFromDisk(key: RegionIndex): Region {
+        val regionFile = File(directory, getRegionFileName(key))
+        val newRegion = Region()
+        if (regionFile.exists()) {
+            if (regionFile.isFile) {
+                FileInputStream(regionFile).use { fileInputStream ->
+                    GZIPInputStream(fileInputStream).use { newRegion.read(it) }
+                }
+            } else throw RuntimeException("Cannot read region file: " + regionFile.absolutePath)
+        }
+        println("Loaded region file: $regionFile")
+        return newRegion
+    }
+
+    private fun ensureRegionFileSavedToDisk(regionIndex: RegionIndex, region: Region) {
+        if (region.isChangedAfterCreateLoadOrSave) {
+            val regionFile = File(directory, getRegionFileName(regionIndex))
+            FileOutputStream(regionFile, false).use { fileOutputStream ->
+                GZIPOutputStream(fileOutputStream).use { region.write(it) }
+            }
+            println("Written region file: $regionFile")
+        }
     }
 
     private class BinaryModelIterator(model: DiskBoundModel) : Iterator<Block> {
-        private val regionXzIterator: Iterator<Triple<Int, Int, Iterator<Block>>>
+        private val regionIterator: Iterator<Pair<RegionIndex, Iterator<RegionLocalBlock>>>
         private var regionX = 0
         private var regionZ = 0
-        private var blockIterator = emptySequence<Block>().iterator()
+        private var blockIterator = emptySequence<RegionLocalBlock>().iterator()
 
         init {
-            regionXzIterator = model.getRegionsXz()
+            regionIterator = model.getAllModelRegionIndices()
                 .sortedWith { a, b ->
-                    if (a.first < b.first) -1
-                    else if (a.first == b.first) {
-                        if (a.second < b.second) -1 else if (a.second == b.second) 0 else 1
+                    if (a.x < b.x) -1
+                    else if (a.x == b.x) {
+                        if (a.z < b.z) -1 else if (a.z == b.z) 0 else 1
                     } else 1
-                }.iterator()
-                .asSequence()
-                .map { xz -> Triple(xz.first, xz.second, model.getRegion(xz.first, xz.second).iterator()) }
+                }
+                .map { regionIndex -> Pair(regionIndex, model.regionsByIndex[regionIndex].iterator()) }
                 .iterator()
         }
 
-        override fun hasNext() = blockIterator.hasNext() || regionXzIterator.hasNext()
+        override fun hasNext() = blockIterator.hasNext() || regionIterator.hasNext()
 
         override fun next(): Block {
             if (!blockIterator.hasNext()) {
-                val regionXz = regionXzIterator.next()
-                regionX = regionXz.first
-                regionZ = regionXz.second
-                blockIterator = regionXz.third
+                val (regionIndex, iter) = regionIterator.next()
+                regionX = regionIndex.x
+                regionZ = regionIndex.z
+                blockIterator = iter
             }
             val regionLocalBlock = blockIterator.next()
-            return Block(
-                BlockPos(
-                    x = regionX * REGION_LENGTH_BLOCKS + regionLocalBlock.pos.x,
-                    y = regionLocalBlock.pos.y,
-                    z = regionZ * REGION_LENGTH_BLOCKS + regionLocalBlock.pos.z
-                ),
-                type = regionLocalBlock.type
-            )
+            return regionLocalBlock.toBlock(regionX = regionX, regionZ = regionZ)
         }
 
     }
 
+    private data class RegionIndex(val x: Int, val z: Int) {
+        companion object {
+            val BlockPos.regionIndex get() = RegionIndex(x = this.regionX, z = this.regionZ)
+        }
+    }
+
     companion object {
-        private fun getRegionFileName(regionX: Int, regionZ: Int): String {
-            val xString = regionX.toFixedLengthString()
-            val zString = regionZ.toFixedLengthString()
-            return "R${xString}$zString.dat"
+        private fun getRegionFileName(regionIndex: RegionIndex): String {
+            val xString = regionIndex.x.toFixedLengthString()
+            val zString = regionIndex.z.toFixedLengthString()
+            return "R$xString$zString.dat"
         }
         private val regionFileNameRegex = "^R(${intFixedLengthRegex})(${intFixedLengthRegex})\\.dat\$".toRegex()
     }

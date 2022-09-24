@@ -5,7 +5,7 @@ import org.mcraster.model.Limits.REGION_LENGTH_CHUNKS
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-internal class HorizontalCoordinateTest {
+internal class HorPosTest {
 
     @Test
     fun `test positive values are correctly calculated`() {
@@ -32,11 +32,11 @@ internal class HorizontalCoordinateTest {
         )
 
         actualValues.forEach { arr ->
-            val coord = HorizontalCoordinate(arr.globalBlock)
+            val coord = HorPos(arr.globalBlock)
             assertEquals(
                 arr.globalBlock,
-                HorizontalCoordinate(region = arr.region, localChunk = arr.localChunk, localBlock = arr.localBlock)
-                    .global
+                HorPos(region = arr.region, localChunk = arr.localChunk, localBlock = arr.localBlock)
+                    .block
             )
             assertEquals(arr.globalChunk, coord.globalChunk)
             assertEquals(arr.region, coord.region)
@@ -70,8 +70,8 @@ internal class HorizontalCoordinateTest {
         )
 
         actualValues.forEach { arr ->
-            val coord = HorizontalCoordinate(arr.globalBlock)
-            assertEquals(arr.globalBlock, HorizontalCoordinate(arr.region, arr.localChunk, arr.localBlock).global)
+            val coord = HorPos(arr.globalBlock)
+            assertEquals(arr.globalBlock, HorPos(arr.region, arr.localChunk, arr.localBlock).block)
             assertEquals(arr.globalChunk, coord.globalChunk)
             assertEquals(arr.region, coord.region)
             assertEquals(arr.localChunk, coord.localChunk)

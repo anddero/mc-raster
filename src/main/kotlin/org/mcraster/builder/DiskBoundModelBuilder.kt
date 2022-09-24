@@ -4,7 +4,6 @@ import org.mcraster.model.DiskBoundModel
 import org.mcraster.model.BlockType
 import org.mcraster.model.BlockPos
 import org.mcraster.util.DataSource
-import java.io.File
 
 object DiskBoundModelBuilder {
 
@@ -25,30 +24,27 @@ object DiskBoundModelBuilder {
     // TODO     3.3.1. Can carry out simple corrections by interpolation
 
     fun build(
-        directory: File,
+        model: DiskBoundModel,
         heightMap: DataSource<BlockPos>,
         markerPoleCoordinates: DataSource<BlockPos>,
         waterPoolCentroids: DataSource<BlockPos>,
         islandCentroids: DataSource<BlockPos> = DataSource.emptyDataSource()
     ): DiskBoundModel {
-        val model = DiskBoundModel(directory)
-
         model.buildTerrain(heightMap = heightMap)
         model.buildMarkerPoles(markerPoles = markerPoleCoordinates)
         model.buildWaterPools(waterPools = waterPoolCentroids)
         model.buildIslands(islandCentroids = islandCentroids)
 
         model.flush()
-
         return model
     }
 
     private fun DiskBoundModel.buildTerrain(heightMap: DataSource<BlockPos>) {
         heightMap.use { highestBlocks ->
             highestBlocks.forEach { highestBlock ->
-                this[BlockPos(x = highestBlock.x, y = 0, z = highestBlock.z)] = BlockType.UNBREAKABLE_STONE
+                this.setBlock(BlockPos(x = highestBlock.x, y = 0, z = highestBlock.z), BlockType.UNBREAKABLE_STONE)
                 for (y in 1 .. highestBlock.y) {
-                    this[BlockPos(x = highestBlock.x, y = y, z = highestBlock.z)] = BlockType.SOIL
+                    this.setBlock(BlockPos(x = highestBlock.x, y = y, z = highestBlock.z), BlockType.SOIL)
                 }
             }
         }
@@ -57,9 +53,9 @@ object DiskBoundModelBuilder {
     private fun DiskBoundModel.buildMarkerPoles(markerPoles: DataSource<BlockPos>) {
         markerPoles.use { highestBlocks ->
             highestBlocks.forEach { highestBlock ->
-                this[BlockPos(x = highestBlock.x, y = 0, z = highestBlock.z)] = BlockType.UNBREAKABLE_STONE
+                this.setBlock(BlockPos(x = highestBlock.x, y = 0, z = highestBlock.z), BlockType.UNBREAKABLE_STONE)
                 for (y in 1 .. highestBlock.y) {
-                    this[BlockPos(x = highestBlock.x, y = y, z = highestBlock.z)] = BlockType.STONE
+                    this.setBlock(BlockPos(x = highestBlock.x, y = y, z = highestBlock.z), BlockType.STONE)
                 }
             }
         }
@@ -73,7 +69,10 @@ object DiskBoundModelBuilder {
                 for (x in -poolWidth / 2 until poolWidth / 2) {
                     for (z in -poolWidth / 2 until poolWidth / 2) {
                         for (y in highestBlock.y downTo highestBlock.y - poolHeight + 1) {
-                            this[BlockPos(x = highestBlock.x + x, y = y, z = highestBlock.z + z)] = BlockType.WATER
+                            this.setBlock(
+                                BlockPos(x = highestBlock.x + x, y = y, z = highestBlock.z + z),
+                                BlockType.WATER
+                            )
                         }
                     }
                 }
@@ -89,7 +88,10 @@ object DiskBoundModelBuilder {
                 for (x in -spawnIslandWidth / 2 until spawnIslandWidth / 2) {
                     for (z in -spawnIslandWidth / 2 until spawnIslandWidth / 2) {
                         for (y in 0 downTo -spawnIslandHeight + 1) {
-                            this[BlockPos(x = centroid.x + x, y = y, centroid.z + z)] = BlockType.SOIL_WITH_GRASS
+                            this.setBlock(
+                                BlockPos(x = centroid.x + x, y = y, centroid.z + z),
+                                BlockType.SOIL_WITH_GRASS
+                            )
                         }
                     }
                 }

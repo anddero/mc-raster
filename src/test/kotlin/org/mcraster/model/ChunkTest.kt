@@ -17,10 +17,10 @@ internal class ChunkTest {
     @Test
     fun `get and set work on the same element`() {
         val chunk = Chunk()
-        chunk[BlockPos(0, 0, 0)] = BlockType.SOIL_WITH_GRASS
-        assertEquals(BlockType.SOIL_WITH_GRASS, chunk[BlockPos(0, 0, 0)])
-        chunk[BlockPos(x = 3, y = 4, z = 5)] = BlockType.GRAVEL
-        assertEquals(BlockType.GRAVEL, chunk[BlockPos(x = 3, y = 4, z = 5)])
+        chunk.setBlock(BlockPos(0, 0, 0), BlockType.SOIL_WITH_GRASS)
+        assertEquals(BlockType.SOIL_WITH_GRASS, chunk.getBlock(BlockPos(0, 0, 0)))
+        chunk.setBlock(BlockPos(x = 3, y = 4, z = 5), BlockType.GRAVEL)
+        assertEquals(BlockType.GRAVEL, chunk.getBlock(BlockPos(x = 3, y = 4, z = 5)))
     }
 
     @Test

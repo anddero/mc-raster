@@ -4,6 +4,7 @@ import org.mcraster.builder.DiskBoundModelBuilder
 import org.mcraster.generator.J2BlocksWorldGenerator
 import org.mcraster.model.BlockPos
 import org.mcraster.model.BlockType
+import org.mcraster.model.DiskBoundModel
 import org.mcraster.reader.DataSourceDescriptor
 import org.mcraster.reader.DataSourceDescriptor.DataFormat.LINES_LEST97_YXH_DOUBLE
 import org.mcraster.reader.DataSourceDescriptor.DataSourceType.RELATIVE_FILE
@@ -69,12 +70,15 @@ object LocalTest {
             gameType = WorldConfig.GameType.CREATIVE
         )
 
+        val model = DiskBoundModel(File("$outputModelsDir/CustomArea1"))
+        model.maxCacheSizeMB = 5120
         val diskBoundModel = DiskBoundModelBuilder.build(
-            directory = File("$outputModelsDir/CustomArea1"),
+            model = model,
             heightMap = heightMapDataSource,
             markerPoleCoordinates = markerPolesDataSource,
             waterPoolCentroids = waterPoolDataSource
         )
+        diskBoundModel.maxCacheSizeMB = 256
         J2BlocksWorldGenerator.generateToDisk(worldConfig, diskBoundModel)
     }
 

@@ -17,6 +17,36 @@ package org.mcraster.model
  */
 data class BlockPos(val x: Int, val y: Int, val z: Int) {
 
-    data class MutableBlockPos(var x: Int, var y: Int, var z: Int)
+    private val posX get() = HorPos(x)
+    private val posZ get() = HorPos(z)
+
+    val regionX get() = posX.region
+    val regionZ get() = posZ.region
+
+    val localChunkX get() = posX.localChunk
+    val localChunkZ get() = posZ.localChunk
+
+    val localBlockX get() = posX.localBlock
+    val localBlockZ get() = posZ.localBlock
+
+    data class ChunkLocalBlockPos(val x: Int, val y: Int, val z: Int) {
+
+        fun toRegionLocalBlockPos(localChunkX: Int, localChunkZ: Int) = RegionLocalBlockPos(
+            x = localChunkX * Limits.CHUNK_LENGTH_BLOCKS + this.x,
+            y = this.y,
+            z = localChunkZ * Limits.CHUNK_LENGTH_BLOCKS + this.z
+        )
+
+    }
+
+    data class RegionLocalBlockPos(val x: Int, val y: Int, val z: Int) {
+
+        fun toBlockPos(regionX: Int, regionZ: Int) = BlockPos(
+            x = regionX * Limits.REGION_LENGTH_BLOCKS + this.x,
+            y = this.y,
+            z = regionZ * Limits.REGION_LENGTH_BLOCKS + this.z
+        )
+
+    }
 
 }
