@@ -44,12 +44,12 @@ class Region : Iterable<Block> {
         isChangedAfterCreateLoadOrSave = false
     }
 
-    private class BinaryRegionIterator(region: Region) : Iterator<Block> {
+    private class BinaryRegionIterator(private val region: Region) : Iterator<Block> {
         private var localChunkX = 0
         private var localChunkZ = 0
         private var chunkIterator = region.chunksXz[localChunkX][localChunkZ].iterator()
 
-        override fun hasNext() = chunkIterator.hasNext() || localChunkX < REGION_LENGTH_CHUNKS
+        override fun hasNext() = chunkIterator.hasNext()
 
         override fun next(): Block {
             val chunkLocalBlock = chunkIterator.next()
@@ -61,9 +61,16 @@ class Region : Iterable<Block> {
                 ),
                 type = chunkLocalBlock.type
             )
-            if (++localChunkZ >= REGION_LENGTH_CHUNKS) {
-                localChunkZ = 0
-                ++localChunkX
+            if (!chunkIterator.hasNext()) {
+                if (++localChunkZ >= REGION_LENGTH_CHUNKS) {
+                    localChunkZ = 0
+                    ++localChunkX
+                }
+                chunkIterator = if (localChunkX < REGION_LENGTH_CHUNKS) {
+                    region.chunksXz[localChunkX][localChunkZ].iterator()
+                } else {
+                    emptySequence<Block>().iterator()
+                }
             }
             return regionLocalBlock
         }

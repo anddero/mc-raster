@@ -32,7 +32,7 @@ internal class RegionTest {
         val region = Region()
 
         var timePassedMs = region.lastAccessTime.until(Instant.now(), ChronoUnit.MILLIS)
-        assertTrue(timePassedMs in 1..100)
+        assertTrue(timePassedMs in 0..100)
 
         Thread.sleep(1000)
         timePassedMs = region.lastAccessTime.until(Instant.now(), ChronoUnit.MILLIS)
@@ -40,7 +40,7 @@ internal class RegionTest {
 
         region[HorizontalCoordinate(123), HorizontalCoordinate(234), 1] = BlockType.WATER
         timePassedMs = region.lastAccessTime.until(Instant.now(), ChronoUnit.MILLIS)
-        assertTrue(timePassedMs in 1 .. 100)
+        assertTrue(timePassedMs in 0 .. 100)
 
         Thread.sleep(2000)
         timePassedMs = region.lastAccessTime.until(Instant.now(), ChronoUnit.MILLIS)
@@ -48,7 +48,7 @@ internal class RegionTest {
 
         region[HorizontalCoordinate(12), HorizontalCoordinate(34), 4]
         timePassedMs = region.lastAccessTime.until(Instant.now(), ChronoUnit.MILLIS)
-        assertTrue(timePassedMs in 1 .. 100)
+        assertTrue(timePassedMs in 0 .. 100)
     }
 
     @Test

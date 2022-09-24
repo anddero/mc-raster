@@ -15,10 +15,8 @@ package org.mcraster.model
  *      The ground-facing side is at y = 20. The sky-facing side is at y = 21. The center is y = 20.5.
  *      The North-facing side is at z = 10. The South-facing side is at z = 11. The center is z = 10.5.
  */
-class BlockPos(val x: Int, val y: Int, val z: Int) {
+data class BlockPos(val x: Int, val y: Int, val z: Int) {
 
-    class MutableBlockPos(var x: Int, var y: Int, var z: Int)
-
-    override fun toString() = "BlockPos(x=$x, y=$y, z=$z)"
+    data class MutableBlockPos(var x: Int, var y: Int, var z: Int)
 
 }

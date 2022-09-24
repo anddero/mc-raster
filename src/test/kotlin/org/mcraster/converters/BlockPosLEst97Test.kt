@@ -34,7 +34,7 @@ internal class BlockPosLEst97Test {
         posL = BlockPosLEst97(x = 1, y = 0, h = 10)
         posB = posL.toBlockPos(62)
         assertEquals(0, posB.x)
-        assertEquals(74, posB.y)
+        assertEquals(73, posB.y)
         assertEquals(-2, posB.z)
 
         posL = BlockPosLEst97(x = 1, y = 1, h = -20)

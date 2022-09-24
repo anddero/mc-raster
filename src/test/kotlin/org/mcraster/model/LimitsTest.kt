@@ -9,8 +9,8 @@ internal class LimitsTest {
     @Test
     fun `validate model size in memory and disk`() {
         // Make sure that if the block type changes, we don't forget to update an important constant.
-        assertTrue(BlockType::value.javaClass.isPrimitive)
-        assertEquals(Limits.DISK_BLOCK_SIZE_BYTES, BlockType::value.javaClass.getField("BYTES").getInt(null))
+        assertEquals("byte", BlockType.NONE.value.javaClass.simpleName)
+        assertEquals(Byte.SIZE_BYTES, Limits.DISK_BLOCK_SIZE_BYTES)
 
         // Make sure the blocks of continuous allocated memory are limited to 1 MB to avoid allocation errors.
         assertTrue(Limits.DISK_CHUNK_SIZE_BYTES < 1024 * 1024)
