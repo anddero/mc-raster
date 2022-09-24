@@ -17,7 +17,7 @@ object LocalTest {
             path = "customArea1/spawn.xyz",
             type = DataSourceDescriptor.DataSourceType.RESOURCE_FILE,
             format = DataSourceDescriptor.DataFormat.LINES_LEST97_YXH_DOUBLE,
-            pointConverter = DataSourceDescriptor.PointConverter.BOUNDING_BLOCK,
+            pointConversionStrategy = DataSourceDescriptor.PointConversionStrategy.BOUNDING_BLOCK,
             seaLevelBlockBottomY = seaLevelBlockBottomY,
             softValidateBlockLimits = true
         ).asDataSource()
@@ -25,7 +25,7 @@ object LocalTest {
             path = "customArea1/heightmap.xyz",
             type = DataSourceDescriptor.DataSourceType.RESOURCE_FILE,
             format = DataSourceDescriptor.DataFormat.LINES_LEST97_YXH_DOUBLE,
-            pointConverter = DataSourceDescriptor.PointConverter.BOUNDING_BLOCK,
+            pointConversionStrategy = DataSourceDescriptor.PointConversionStrategy.BOUNDING_BLOCK,
             seaLevelBlockBottomY = seaLevelBlockBottomY,
             softValidateBlockLimits = true,
             blockFilter = loadHeightMapFilter()
@@ -34,7 +34,7 @@ object LocalTest {
             path = "customArea1/poles.xyz",
             type = DataSourceDescriptor.DataSourceType.RESOURCE_FILE,
             format = DataSourceDescriptor.DataFormat.LINES_LEST97_YXH_DOUBLE,
-            pointConverter = DataSourceDescriptor.PointConverter.BOUNDING_BLOCK,
+            pointConversionStrategy = DataSourceDescriptor.PointConversionStrategy.BOUNDING_BLOCK,
             seaLevelBlockBottomY = seaLevelBlockBottomY,
             softValidateBlockLimits = true
         ).asDataSource()
@@ -42,7 +42,7 @@ object LocalTest {
             path = "customArea1/pools.xyz",
             type = DataSourceDescriptor.DataSourceType.RESOURCE_FILE,
             format = DataSourceDescriptor.DataFormat.LINES_LEST97_YXH_DOUBLE,
-            pointConverter = DataSourceDescriptor.PointConverter.BOUNDING_BLOCK,
+            pointConversionStrategy = DataSourceDescriptor.PointConversionStrategy.BOUNDING_BLOCK,
             seaLevelBlockBottomY = seaLevelBlockBottomY,
             softValidateBlockLimits = true
         ).asDataSource()
@@ -75,7 +75,7 @@ object LocalTest {
             path = "customArea1/minMaxFilter.xyz",
             type = DataSourceDescriptor.DataSourceType.RESOURCE_FILE,
             format = DataSourceDescriptor.DataFormat.LINES_LEST97_YXH_DOUBLE,
-            pointConverter = DataSourceDescriptor.PointConverter.BOUNDING_BLOCK,
+            pointConversionStrategy = DataSourceDescriptor.PointConversionStrategy.BOUNDING_BLOCK,
             seaLevelBlockBottomY = MC_SEA_BLOCK_LEVEL,
             softValidateBlockLimits = true
         ).asDataSource().firstTwo()

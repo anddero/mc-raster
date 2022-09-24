@@ -10,14 +10,14 @@ object Lest97Reader {
 
     fun linesLest97YxhDouble(
         file: File,
-        conversionStrategy: DataSourceDescriptor.PointConverter,
+        pointConversionStrategy: DataSourceDescriptor.PointConversionStrategy,
         seaLevelBlockBottomY: Int
     ): DataSource<BlockPos> {
         val pointsLEst97 = file.asLinesDataSource()
             .map { yxhLine -> yxhLine.split(" ").map { it.toDouble() } }
             .map { lest97yxh -> PointLEst97(lest97yxh[1], lest97yxh[0], lest97yxh[2]) }
-        val blockPositionsLEst97 = when(conversionStrategy) {
-            DataSourceDescriptor.PointConverter.BOUNDING_BLOCK -> pointsLEst97.map { it.getBoundingBlock() }
+        val blockPositionsLEst97 = when(pointConversionStrategy) {
+            DataSourceDescriptor.PointConversionStrategy.BOUNDING_BLOCK -> pointsLEst97.map { it.getBoundingBlock() }
         }
         return blockPositionsLEst97
             .map { it.toBlockPos(seaLevelBlockBottomY = seaLevelBlockBottomY) }

@@ -11,7 +11,7 @@ class DataSourceDescriptor(
     private val path: String,
     private val type: DataSourceType,
     private val format: DataFormat,
-    private val pointConverter: PointConverter,
+    private val pointConversionStrategy: PointConversionStrategy,
     private val seaLevelBlockBottomY: Int,
     private val softValidateBlockLimits: Boolean,
     private val blockFilter: ((BlockPos) -> Boolean)? = null
@@ -22,7 +22,8 @@ class DataSourceDescriptor(
             DataSourceType.RESOURCE_FILE -> FileUtils.getResource(path)
         }
         var data: DataSource<BlockPos> = when(format) {
-            DataFormat.LINES_LEST97_YXH_DOUBLE -> linesLest97YxhDouble(source, pointConverter, seaLevelBlockBottomY)
+            DataFormat.LINES_LEST97_YXH_DOUBLE ->
+                linesLest97YxhDouble(source, pointConversionStrategy, seaLevelBlockBottomY)
         }
         blockFilter?.let { data = data.filter(it) }
         if (softValidateBlockLimits) {
@@ -39,7 +40,7 @@ class DataSourceDescriptor(
         LINES_LEST97_YXH_DOUBLE
     }
 
-    enum class PointConverter {
+    enum class PointConversionStrategy {
         BOUNDING_BLOCK
     }
 
