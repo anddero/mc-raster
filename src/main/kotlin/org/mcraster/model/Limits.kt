@@ -15,14 +15,14 @@ object Limits {
     // Circumference of Earth is 40'075'017m around equator (X) and 40'007'863m (Z) around poles.
     // Below are the min and max block coordinates (both ends inclusive) if we centered ourselves such that the range
     // of positive and negative coordinates would be equal.
-    val MIN_BLOCK_POINT = BlockPos(
+    val MIN_BLOCK_POS = BlockPos(
         x = -20_037_508, // This is the smallest West-facing side coordinate of any block and thus the Western model border.
         y = 0, // This is the lowest bottom side of any block and thus the bottom model border. Using only non-negative integers for heights.
         z = -20_003_931 // This is the smallest North-facing side coordinate of any block and thus the Northern model border.
     )
-    val MAX_BLOCK_POINT = BlockPos(
+    val MAX_BLOCK_POS = BlockPos(
         x = 20_037_508, // This is the largest West-facing side coordinate of any block. The largest East-facing side (and thus the Eastern model border) would be one unit higher.
-        y = MODEL_HEIGHT_BLOCKS - 1, // This is the highest bottom side of any block, the highest top side would be one unit higher, which would be the highest point where a person can stand.
+        y = MODEL_HEIGHT_BLOCKS - 1, // This is the highest bottom side of any block, the highest top side would be one unit higher, which would be the highest position where a person can stand.
         z = 20_003_931 // This is the largest North-facing side coordinate of any block. The South-facing side (and thus the Southern model border) would be one unit higher.
     )
 
@@ -34,8 +34,8 @@ object Limits {
     private const val MAX_CACHE_SIZE_MB = 4096
     const val MAX_CACHE_SIZE_REGIONS = MAX_CACHE_SIZE_MB / DISK_REGION_SIZE_MB_INEXACT
 
-    fun BlockPos.isWithinLimits() = (x !in MIN_BLOCK_POINT.x..MAX_BLOCK_POINT.x ||
-            y !in MIN_BLOCK_POINT.y..MAX_BLOCK_POINT.y ||
-            z !in MIN_BLOCK_POINT.z..MAX_BLOCK_POINT.z)
+    fun BlockPos.isWithinLimits() = (x !in MIN_BLOCK_POS.x..MAX_BLOCK_POS.x ||
+            y !in MIN_BLOCK_POS.y..MAX_BLOCK_POS.y ||
+            z !in MIN_BLOCK_POS.z..MAX_BLOCK_POS.z)
 
 }

@@ -28,7 +28,7 @@ class Region : Iterable<Block> {
     operator fun set(x: HorizontalCoordinate, z: HorizontalCoordinate, y: Int, value: BlockType) {
         lastAccessTime = Instant.now()
         val changed = chunksXz[x.localChunk][z.localChunk]
-            .set(localPoint = BlockPos(x = x.localBlock, z = z.localBlock, y = y), value = value)
+            .set(localPos = BlockPos(x = x.localBlock, z = z.localBlock, y = y), value = value)
         if (changed) this.isChangedAfterCreateLoadOrSave = true
     }
 
@@ -55,9 +55,9 @@ class Region : Iterable<Block> {
             val chunkLocalBlock = chunkIterator.next()
             val regionLocalBlock = Block(
                 BlockPos(
-                    x = localChunkX * CHUNK_LENGTH_BLOCKS + chunkLocalBlock.point.x,
-                    y = chunkLocalBlock.point.y,
-                    z = localChunkZ * CHUNK_LENGTH_BLOCKS + chunkLocalBlock.point.z
+                    x = localChunkX * CHUNK_LENGTH_BLOCKS + chunkLocalBlock.pos.x,
+                    y = chunkLocalBlock.pos.y,
+                    z = localChunkZ * CHUNK_LENGTH_BLOCKS + chunkLocalBlock.pos.z
                 ),
                 type = chunkLocalBlock.type
             )

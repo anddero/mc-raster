@@ -19,11 +19,11 @@ class Chunk : Iterable<Block> {
         initialValue = NONE.value
     )
 
-    operator fun get(localPoint: BlockPos) =
-        BlockType[blocksXzy.get(i1 = localPoint.x, i2 = localPoint.z, i3 = localPoint.y)]
+    operator fun get(localPos: BlockPos) =
+        BlockType[blocksXzy.get(i1 = localPos.x, i2 = localPos.z, i3 = localPos.y)]
 
-    operator fun set(localPoint: BlockPos, value: BlockType) =
-        blocksXzy.set(i1 = localPoint.x, i2 = localPoint.z, i3 = localPoint.y, value = value.value)
+    operator fun set(localPos: BlockPos, value: BlockType) =
+        blocksXzy.set(i1 = localPos.x, i2 = localPos.z, i3 = localPos.y, value = value.value)
 
     override fun iterator(): Iterator<Block> = BinaryChunkIterator(this)
 
@@ -32,21 +32,21 @@ class Chunk : Iterable<Block> {
     fun write(outputStream: OutputStream) = blocksXzy.write(outputStream)
 
     private class BinaryChunkIterator(chunk: Chunk) : Iterator<Block> {
-        private val localPoint = BlockPos.MutableBlockPos(0, 0, 0)
+        private val localPos = BlockPos.MutableBlockPos(0, 0, 0)
         private var arrayIterator = chunk.blocksXzy.iterator()
 
         override fun hasNext() = arrayIterator.hasNext()
 
         override fun next(): Block {
             val block = Block(
-                point = BlockPos(x = localPoint.x, z = localPoint.z, y = localPoint.y),
+                pos = BlockPos(x = localPos.x, z = localPos.z, y = localPos.y),
                 type = BlockType[arrayIterator.next()]
             )
-            if (++localPoint.y >= MODEL_HEIGHT_BLOCKS) {
-                localPoint.y = 0
-                if (++localPoint.z >= CHUNK_LENGTH_BLOCKS) {
-                    localPoint.z = 0
-                    ++localPoint.x
+            if (++localPos.y >= MODEL_HEIGHT_BLOCKS) {
+                localPos.y = 0
+                if (++localPos.z >= CHUNK_LENGTH_BLOCKS) {
+                    localPos.z = 0
+                    ++localPos.x
                 }
             }
             return block

@@ -44,22 +44,22 @@ object DiskBoundModelBuilder {
     }
 
     private fun DiskBoundModel.buildTerrain(heightMap: DataSource<BlockPos>) {
-        heightMap.use { highestPoints ->
-            highestPoints.forEach { highestPoint ->
-                this[BlockPos(x = highestPoint.x, y = 0, z = highestPoint.z)] = BlockType.UNBREAKABLE_STONE
-                for (y in 1 until highestPoint.y) {
-                    this[BlockPos(x = highestPoint.x, y = y, z = highestPoint.z)] = BlockType.SOIL
+        heightMap.use { highestBlocks ->
+            highestBlocks.forEach { highestBlock ->
+                this[BlockPos(x = highestBlock.x, y = 0, z = highestBlock.z)] = BlockType.UNBREAKABLE_STONE
+                for (y in 1 until highestBlock.y) {
+                    this[BlockPos(x = highestBlock.x, y = y, z = highestBlock.z)] = BlockType.SOIL
                 }
             }
         }
     }
 
     private fun DiskBoundModel.buildMarkerPoles(markerPoles: DataSource<BlockPos>) {
-        markerPoles.use { highestPoints ->
-            highestPoints.forEach { highestPoint ->
-                this[BlockPos(x = highestPoint.x, y = 0, z = highestPoint.z)] = BlockType.UNBREAKABLE_STONE
-                for (y in 1 until highestPoint.y) {
-                    this[BlockPos(x = highestPoint.x, y = y, z = highestPoint.z)] = BlockType.STONE
+        markerPoles.use { highestBlocks ->
+            highestBlocks.forEach { highestBlock ->
+                this[BlockPos(x = highestBlock.x, y = 0, z = highestBlock.z)] = BlockType.UNBREAKABLE_STONE
+                for (y in 1 until highestBlock.y) {
+                    this[BlockPos(x = highestBlock.x, y = y, z = highestBlock.z)] = BlockType.STONE
                 }
             }
         }
@@ -68,12 +68,12 @@ object DiskBoundModelBuilder {
     private fun DiskBoundModel.buildWaterPools(waterPools: DataSource<BlockPos>) {
         val poolWidth = 10
         val poolHeight = 5
-        waterPools.use { highestPoints ->
-            highestPoints.forEach { highestPoint ->
+        waterPools.use { highestBlocks ->
+            highestBlocks.forEach { highestBlock ->
                 for (x in -poolWidth / 2 until poolWidth / 2) {
                     for (z in -poolWidth / 2 until poolWidth / 2) {
-                        for (y in highestPoint.y downTo highestPoint.y - poolHeight + 1) {
-                            this[BlockPos(x = highestPoint.x + x, y = y, z = highestPoint.z + z)] = BlockType.WATER
+                        for (y in highestBlock.y downTo highestBlock.y - poolHeight + 1) {
+                            this[BlockPos(x = highestBlock.x + x, y = y, z = highestBlock.z + z)] = BlockType.WATER
                         }
                     }
                 }

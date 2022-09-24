@@ -6,9 +6,9 @@ import org.mcraster.model.BlockPos
  * X and Y stand for coordinates from the L-EST97 system, H stands for height from sea level (bottom -1, top 0).
  * In the L-EST97 coordinate system, X increases towards North, Y increases towards East.
  *
- * In terms of one cubic meter blocks, the point represents the lowest coordinate of the block in all dimensions, that
+ * In terms of one cubic meter blocks, the values represent the lowest points of the block in all dimensions, that
  * is, the bottom South-West corner of the block.
- * For example, if the point of a block would be (x = 3, y = 8, h = 20), then:
+ * For example, if the position of a block would be (x = 3, y = 8, h = 20), then:
  *      The South-facing side would be x = 3, but the North-facing side x = 4. Center x = 3.5.
  *      The West-facing side would be y = 8, but the East-facing side y = 9. Center y = 8.5.
  *      The ground-facing side would be h = 20, but the sky-facing side h = 21. Center h = 20.5.

@@ -1,3 +1,3 @@
 package org.mcraster.model
 
-class Block(val point: BlockPos, val type: BlockType)
+class Block(val pos: BlockPos, val type: BlockType)

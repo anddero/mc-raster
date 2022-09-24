@@ -7,7 +7,7 @@ class WorldConfig(
     val worldName: String,
     val generator: GeneratorType,
     val layers: List<Layer>,
-    val spawnPoint: BlockPos,
+    val spawnPos: BlockPos,
     val isGeneratingStructuresEnabled: Boolean,
     val gameType: GameType
 ) {

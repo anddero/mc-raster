@@ -13,7 +13,7 @@ object LocalTest {
 
     fun generateCustomArea1() {
         val seaLevelBlockBottomY = MC_SEA_BLOCK_LEVEL
-        val spawnPointDataSource = DataSourceDescriptor(
+        val spawnPosDataSource = DataSourceDescriptor(
             path = "customArea1/spawn.xyz",
             type = DataSourceDescriptor.DataSourceType.RESOURCE_FILE,
             format = DataSourceDescriptor.DataFormat.LINES_LEST97_YXH_DOUBLE,
@@ -56,7 +56,7 @@ object LocalTest {
                 WorldConfig.Layer(BlockType.SOIL, 5, 7),
                 WorldConfig.Layer(BlockType.WATER, 8, seaLevelBlockBottomY)
             ),
-            spawnPoint = spawnPointDataSource.first(),
+            spawnPos = spawnPosDataSource.first(),
             isGeneratingStructuresEnabled = false,
             gameType = WorldConfig.GameType.CREATIVE
         )

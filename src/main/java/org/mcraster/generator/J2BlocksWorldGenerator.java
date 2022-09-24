@@ -43,9 +43,9 @@ public class J2BlocksWorldGenerator {
         Level level = new Level(worldConfig.getWorldName(), generator);
         level.setGameType(getGameType(worldConfig.getGameType()));
         level.setSpawnPoint(
-                worldConfig.getSpawnPoint().getX(),
-                worldConfig.getSpawnPoint().getY(),
-                worldConfig.getSpawnPoint().getZ()
+                worldConfig.getSpawnPos().getX(),
+                worldConfig.getSpawnPos().getY(),
+                worldConfig.getSpawnPos().getZ()
         );
         level.setMapFeatures(worldConfig.isGeneratingStructuresEnabled());
 
@@ -56,9 +56,9 @@ public class J2BlocksWorldGenerator {
         diskBoundModel.iterator().forEachRemaining(block -> {
             getBlock(block.getType()).ifPresent(
                     iBlock -> world.setBlock(
-                            block.getPoint().getX(),
-                            block.getPoint().getY(),
-                            block.getPoint().getZ(),
+                            block.getPos().getX(),
+                            block.getPos().getY(),
+                            block.getPos().getZ(),
                             iBlock
                     )
             );

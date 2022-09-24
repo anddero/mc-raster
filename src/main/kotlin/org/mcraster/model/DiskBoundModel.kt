@@ -25,17 +25,17 @@ class DiskBoundModel(private val directory: File) : Iterable<Block> {
     private var regionFileReadCount = 0
     private var regionFileWriteCount = 0
 
-    operator fun get(point: BlockPos): BlockType {
-        val xCoord = HorizontalCoordinate(point.x)
-        val zCoord = HorizontalCoordinate(point.z)
-        return getRegion(regionX = xCoord.region, regionZ = zCoord.region).get(x = xCoord, z = zCoord, y = point.y)
+    operator fun get(pos: BlockPos): BlockType {
+        val xCoord = HorizontalCoordinate(pos.x)
+        val zCoord = HorizontalCoordinate(pos.z)
+        return getRegion(regionX = xCoord.region, regionZ = zCoord.region).get(x = xCoord, z = zCoord, y = pos.y)
     }
 
-    operator fun set(point: BlockPos, block: BlockType) {
-        val xCoord = HorizontalCoordinate(point.x)
-        val zCoord = HorizontalCoordinate(point.z)
+    operator fun set(pos: BlockPos, block: BlockType) {
+        val xCoord = HorizontalCoordinate(pos.x)
+        val zCoord = HorizontalCoordinate(pos.z)
         return getRegion(regionX = xCoord.region, regionZ = zCoord.region)
-            .set(x = xCoord, z = zCoord, y = point.y, value = block)
+            .set(x = xCoord, z = zCoord, y = pos.y, value = block)
     }
 
     /**
@@ -132,9 +132,9 @@ class DiskBoundModel(private val directory: File) : Iterable<Block> {
             val regionLocalBlock = blockIterator.next()
             return Block(
                 BlockPos(
-                    x = regionX * REGION_LENGTH_BLOCKS + regionLocalBlock.point.x,
-                    y = regionLocalBlock.point.y,
-                    z = regionZ * REGION_LENGTH_BLOCKS + regionLocalBlock.point.z
+                    x = regionX * REGION_LENGTH_BLOCKS + regionLocalBlock.pos.x,
+                    y = regionLocalBlock.pos.y,
+                    z = regionZ * REGION_LENGTH_BLOCKS + regionLocalBlock.pos.z
                 ),
                 type = regionLocalBlock.type
             )

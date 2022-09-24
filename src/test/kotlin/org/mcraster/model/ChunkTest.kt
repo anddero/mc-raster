@@ -28,19 +28,19 @@ internal class ChunkTest {
         val chunkIterator = Chunk().iterator()
         for (i in 0 until MODEL_HEIGHT_BLOCKS) {
             val block = chunkIterator.next()
-            assertEquals(0, block.point.x)
-            assertEquals(0, block.point.z)
-            assertEquals(i, block.point.y)
+            assertEquals(0, block.pos.x)
+            assertEquals(0, block.pos.z)
+            assertEquals(i, block.pos.y)
         }
         var block = chunkIterator.next()
-        assertEquals(0, block.point.x)
-        assertEquals(1, block.point.z)
-        assertEquals(0, block.point.y)
+        assertEquals(0, block.pos.x)
+        assertEquals(1, block.pos.z)
+        assertEquals(0, block.pos.y)
 
         block = chunkIterator.next()
-        assertEquals(0, block.point.x)
-        assertEquals(1, block.point.z)
-        assertEquals(1, block.point.y)
+        assertEquals(0, block.pos.x)
+        assertEquals(1, block.pos.z)
+        assertEquals(1, block.pos.y)
     }
 
 }
