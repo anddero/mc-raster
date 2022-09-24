@@ -7,7 +7,7 @@ import java.io.OutputStream
 import java.time.Instant
 
 /**
- * Represents a continuous block of disk space to hold a horizontally square area portion of world data.
+ * Represents a continuous block of disk space to hold a horizontally square area portion of model data.
  * The data underneath will not be held in consecutive memory when loaded.
  */
 class Region : Iterable<Block> {

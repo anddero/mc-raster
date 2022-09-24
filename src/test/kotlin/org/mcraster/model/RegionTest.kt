@@ -1,6 +1,6 @@
 package org.mcraster.model
 
-import org.mcraster.model.Limits.WORLD_HEIGHT_BLOCKS
+import org.mcraster.model.Limits.MODEL_HEIGHT_BLOCKS
 import org.mcraster.model.Limits.CHUNK_LENGTH_BLOCKS
 import org.mcraster.model.Limits.CHUNK_SIZE_BLOCKS
 import org.mcraster.model.Limits.DISK_REGION_SIZE_BYTES
@@ -85,7 +85,7 @@ internal class RegionTest {
 
         for (x in 0 until REGION_LENGTH_BLOCKS) {
             for (z in 0 until REGION_LENGTH_BLOCKS) {
-                for (y in 0 until WORLD_HEIGHT_BLOCKS) {
+                for (y in 0 until MODEL_HEIGHT_BLOCKS) {
                     savedRegion.set(x = hCo(x), z = hCo(z), y = y, value = Random.nextBlock())
                 }
             }
@@ -120,7 +120,7 @@ internal class RegionTest {
                 for (chunkZ in 2..3) {
                     for (localX in 0 until CHUNK_LENGTH_BLOCKS) {
                         for (localZ in 0 until CHUNK_LENGTH_BLOCKS) {
-                            for (y in 0 until WORLD_HEIGHT_BLOCKS) {
+                            for (y in 0 until MODEL_HEIGHT_BLOCKS) {
                                 region.set(
                                     x = HorizontalCoordinate(0, chunkX, localX),
                                     z = HorizontalCoordinate(0, chunkZ, localZ),

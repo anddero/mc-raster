@@ -1,21 +1,21 @@
 package org.mcraster.model
 
 import org.mcraster.model.BlockType.NONE
-import org.mcraster.model.Limits.WORLD_HEIGHT_BLOCKS
+import org.mcraster.model.Limits.MODEL_HEIGHT_BLOCKS
 import org.mcraster.model.Limits.CHUNK_LENGTH_BLOCKS
 import org.mcraster.util.ByteVec3
 import java.io.InputStream
 import java.io.OutputStream
 
 /**
- * Represents a continuous block of memory to hold a square area portion of world data.
+ * Represents a continuous block of memory to hold a square area portion of model data.
  */
 class Chunk : Iterable<Block> {
 
     private val blocksXzy = ByteVec3(
         dim1 = CHUNK_LENGTH_BLOCKS,
         dim2 = CHUNK_LENGTH_BLOCKS,
-        dim3 = WORLD_HEIGHT_BLOCKS,
+        dim3 = MODEL_HEIGHT_BLOCKS,
         initialValue = NONE.value
     )
 
@@ -42,7 +42,7 @@ class Chunk : Iterable<Block> {
                 point = BlockPos(x = localPoint.x, z = localPoint.z, y = localPoint.y),
                 type = BlockType[arrayIterator.next()]
             )
-            if (++localPoint.y >= WORLD_HEIGHT_BLOCKS) {
+            if (++localPoint.y >= MODEL_HEIGHT_BLOCKS) {
                 localPoint.y = 0
                 if (++localPoint.z >= CHUNK_LENGTH_BLOCKS) {
                     localPoint.z = 0

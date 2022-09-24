@@ -1,6 +1,6 @@
 package org.mcraster.model
 
-import org.mcraster.model.Limits.WORLD_HEIGHT_BLOCKS
+import org.mcraster.model.Limits.MODEL_HEIGHT_BLOCKS
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -26,7 +26,7 @@ internal class ChunkTest {
     @Test
     fun `iterator iterates through elements Y first, then Z, then X`() {
         val chunkIterator = Chunk().iterator()
-        for (i in 0 until WORLD_HEIGHT_BLOCKS) {
+        for (i in 0 until MODEL_HEIGHT_BLOCKS) {
             val block = chunkIterator.next()
             assertEquals(0, block.point.x)
             assertEquals(0, block.point.z)

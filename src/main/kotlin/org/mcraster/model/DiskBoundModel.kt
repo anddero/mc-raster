@@ -9,10 +9,10 @@ import java.io.FileInputStream
 import java.io.FileOutputStream
 
 /**
- * Represents a disk directory containing several files holding portions of world data.
+ * Represents a disk directory containing several files holding portions of model data.
  * Disk-bound stands for the characteristic of the model - since large models would not fit entirely in memory when
- * worked on, this model is continuously interacting with the disk - loading portions of the world on demand and saving
- * portions of the world if low on memory. If this class is created with an existing directory, it represents the world
+ * worked on, this model is continuously interacting with the disk - loading portions of the model on demand and saving
+ * portions of the model if low on memory. If this class is created with an existing directory, it represents the model
  * contained in that directory and will interact with its data as expected - so progress can be saved and shared among
  * instances of the program.
  *
