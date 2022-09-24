@@ -1,31 +1,37 @@
 package org.mcraster.model
 
-import org.mcraster.model.BinaryChunk.Companion.CHUNK_SIZE_BLOCKS
-import org.mcraster.model.BinaryChunk.Companion.CHUNK_LENGTH_BLOCKS
-import org.mcraster.model.BinaryChunk.Companion.DISK_CHUNK_SIZE_BYTES
+import org.mcraster.model.Limits.CHUNK_LENGTH_BLOCKS
+import org.mcraster.model.Limits.REGION_LENGTH_CHUNKS
 import java.io.InputStream
 import java.io.OutputStream
 import java.time.Instant
 
-class BinaryRegion : Iterable<Block> {
+/**
+ * Represents a continuous block of disk space to hold a horizontally square area portion of world data.
+ * The data underneath will not be held in consecutive memory when loaded.
+ */
+class Region : Iterable<Block> {
 
-    private val chunksXz = List(REGION_LENGTH_CHUNKS) { List(REGION_LENGTH_CHUNKS) { BinaryChunk() } }
+    private val chunksXz = List(REGION_LENGTH_CHUNKS) { List(REGION_LENGTH_CHUNKS) { Chunk() } }
+
     var lastAccessTime = Instant.now()
         private set
+
     var isChangedAfterCreateLoadOrSave = false
         private set
 
     operator fun get(x: HorizontalCoordinate, z: HorizontalCoordinate, y: Int): BlockType {
         lastAccessTime = Instant.now()
-        return chunksXz[x.localChunk][z.localChunk]
-            .get(localX = x.localBlock, localZ = z.localBlock, y = y)
+        return chunksXz[x.localChunk][z.localChunk][BlockPos(x = x.localBlock, z = z.localBlock, y = y)]
     }
+
     operator fun set(x: HorizontalCoordinate, z: HorizontalCoordinate, y: Int, value: BlockType) {
         lastAccessTime = Instant.now()
         val changed = chunksXz[x.localChunk][z.localChunk]
-            .set(localX = x.localBlock, localZ = z.localBlock, y = y, value = value)
+            .set(localPoint = BlockPos(x = x.localBlock, z = z.localBlock, y = y), value = value)
         if (changed) this.isChangedAfterCreateLoadOrSave = true
     }
+
     override fun iterator(): Iterator<Block> = BinaryRegionIterator(this)
 
     fun write(outputStream: OutputStream) {
@@ -38,16 +44,7 @@ class BinaryRegion : Iterable<Block> {
         isChangedAfterCreateLoadOrSave = false
     }
 
-    companion object {
-        const val REGION_LENGTH_CHUNKS = 32
-        const val REGION_LENGTH_BLOCKS = REGION_LENGTH_CHUNKS * CHUNK_LENGTH_BLOCKS
-        const val REGION_SIZE_CHUNKS = REGION_LENGTH_CHUNKS * REGION_LENGTH_CHUNKS
-        const val REGION_SIZE_BLOCKS = REGION_SIZE_CHUNKS * CHUNK_SIZE_BLOCKS
-        const val DISK_REGION_SIZE_BYTES = REGION_SIZE_CHUNKS * DISK_CHUNK_SIZE_BYTES
-        const val DISK_REGION_SIZE_MB = DISK_REGION_SIZE_BYTES / 1024 / 1024
-    }
-
-    private class BinaryRegionIterator(region: BinaryRegion) : Iterator<Block> {
+    private class BinaryRegionIterator(region: Region) : Iterator<Block> {
         private var localChunkX = 0
         private var localChunkZ = 0
         private var chunkIterator = region.chunksXz[localChunkX][localChunkZ].iterator()
@@ -56,9 +53,13 @@ class BinaryRegion : Iterable<Block> {
 
         override fun next(): Block {
             val chunkLocalBlock = chunkIterator.next()
-            val regionLocalBlock = chunkLocalBlock.copy(
-                x = localChunkX * CHUNK_LENGTH_BLOCKS + chunkLocalBlock.x,
-                z = localChunkZ * CHUNK_LENGTH_BLOCKS + chunkLocalBlock.z
+            val regionLocalBlock = Block(
+                BlockPos(
+                    x = localChunkX * CHUNK_LENGTH_BLOCKS + chunkLocalBlock.point.x,
+                    y = chunkLocalBlock.point.y,
+                    z = localChunkZ * CHUNK_LENGTH_BLOCKS + chunkLocalBlock.point.z
+                ),
+                type = chunkLocalBlock.type
             )
             if (++localChunkZ >= REGION_LENGTH_CHUNKS) {
                 localChunkZ = 0

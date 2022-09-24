@@ -1,5 +1,7 @@
 package org.mcraster.model
 
+import org.mcraster.model.Limits.CHUNK_LENGTH_BLOCKS
+import org.mcraster.model.Limits.REGION_LENGTH_CHUNKS
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -9,8 +11,8 @@ internal class HorizontalCoordinateTest {
     fun `test positive values are correctly calculated`() {
         // The below table of coordinate values are calculated based on the following assumptions
         assertEquals(2_147_483_647, Int.MAX_VALUE)
-        assertEquals(32, BinaryRegion.REGION_LENGTH_CHUNKS)
-        assertEquals(16, BinaryChunk.CHUNK_LENGTH_BLOCKS)
+        assertEquals(32, REGION_LENGTH_CHUNKS)
+        assertEquals(16, CHUNK_LENGTH_BLOCKS)
 
         val actualValues = arrayOf(
             arrayOf(0, 0, 0, 0, 0),
@@ -40,8 +42,8 @@ internal class HorizontalCoordinateTest {
             assertEquals(arr.region, coord.region)
             assertEquals(arr.localChunk, coord.localChunk)
             assertEquals(arr.localBlock, coord.localBlock)
-            assertEquals(arr.globalChunk, arr.region * BinaryRegion.REGION_LENGTH_CHUNKS + arr.localChunk)
-            assertEquals(arr.globalBlock, arr.globalChunk * BinaryChunk.CHUNK_LENGTH_BLOCKS + arr.localBlock)
+            assertEquals(arr.globalChunk, arr.region * REGION_LENGTH_CHUNKS + arr.localChunk)
+            assertEquals(arr.globalBlock, arr.globalChunk * CHUNK_LENGTH_BLOCKS + arr.localBlock)
         }
     }
 
@@ -49,8 +51,8 @@ internal class HorizontalCoordinateTest {
     fun `test negative values are correctly calculated`() {
         // The below table of coordinate values are calculated based on the following assumptions
         assertEquals(-2_147_483_648, Int.MIN_VALUE)
-        assertEquals(32, BinaryRegion.REGION_LENGTH_CHUNKS)
-        assertEquals(16, BinaryChunk.CHUNK_LENGTH_BLOCKS)
+        assertEquals(32, REGION_LENGTH_CHUNKS)
+        assertEquals(16, CHUNK_LENGTH_BLOCKS)
 
         val actualValues = arrayOf(
             arrayOf(-1, -1, -1, 31, 15),
@@ -74,8 +76,8 @@ internal class HorizontalCoordinateTest {
             assertEquals(arr.region, coord.region)
             assertEquals(arr.localChunk, coord.localChunk)
             assertEquals(arr.localBlock, coord.localBlock)
-            assertEquals(arr.globalChunk, arr.region * BinaryRegion.REGION_LENGTH_CHUNKS + arr.localChunk)
-            assertEquals(arr.globalBlock, arr.globalChunk * BinaryChunk.CHUNK_LENGTH_BLOCKS + arr.localBlock)
+            assertEquals(arr.globalChunk, arr.region * REGION_LENGTH_CHUNKS + arr.localChunk)
+            assertEquals(arr.globalBlock, arr.globalChunk * CHUNK_LENGTH_BLOCKS + arr.localBlock)
         }
     }
 

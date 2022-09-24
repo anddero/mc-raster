@@ -1,10 +1,10 @@
 package org.mcraster.util
 
-class ByteVec3(a: Int, b: Int, c: Int, initialValue: Byte)
-    : DimensionalByteArray(a, b, c, initialValue = initialValue) {
+class ByteVec3(dim1: Int, dim2: Int, dim3: Int, initialValue: Byte)
+    : DimensionalByteArray(dim1, dim2, dim3, initialValue = initialValue) {
 
-    operator fun get(a: Int, b: Int, c: Int) = super.get(a, b, c)
+    operator fun get(i1: Int, i2: Int, i3: Int) = super.get(i1, i2, i3)
 
-    operator fun set(a: Int, b: Int, c: Int, value: Byte) = super.set(a, b, c, value = value)
+    operator fun set(i1: Int, i2: Int, i3: Int, value: Byte) = super.set(i1, i2, i3, value = value)
 
 }

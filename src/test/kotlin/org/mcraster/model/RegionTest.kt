@@ -1,5 +1,12 @@
 package org.mcraster.model
 
+import org.mcraster.model.Limits.WORLD_HEIGHT_BLOCKS
+import org.mcraster.model.Limits.CHUNK_LENGTH_BLOCKS
+import org.mcraster.model.Limits.CHUNK_SIZE_BLOCKS
+import org.mcraster.model.Limits.DISK_REGION_SIZE_BYTES
+import org.mcraster.model.Limits.REGION_LENGTH_BLOCKS
+import org.mcraster.model.Limits.REGION_LENGTH_CHUNKS
+import org.mcraster.model.Limits.REGION_SIZE_BLOCKS
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.time.Instant
@@ -10,11 +17,11 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-internal class BinaryRegionTest {
+internal class RegionTest {
 
     @Test
     fun `initial values are set correctly`() {
-        val region = BinaryRegion()
+        val region = Region()
         region.forEach {
             assertEquals(BlockType.NONE, it.type)
         }
@@ -22,7 +29,7 @@ internal class BinaryRegionTest {
 
     @Test
     fun `getLastAccessTime shows accurate access time`() {
-        val region = BinaryRegion()
+        val region = Region()
 
         var timePassedMs = region.lastAccessTime.until(Instant.now(), ChronoUnit.MILLIS)
         assertTrue(timePassedMs in 1..100)
@@ -46,7 +53,7 @@ internal class BinaryRegionTest {
 
     @Test
     fun `isChanged returns true only if it was changed`() {
-        val region = BinaryRegion()
+        val region = Region()
         assertFalse(region.isChangedAfterCreateLoadOrSave)
 
         region[HorizontalCoordinate(12), HorizontalCoordinate(34), 4]
@@ -61,9 +68,9 @@ internal class BinaryRegionTest {
 
     @Test
     fun `get and set work on the same element`() {
-        val region = BinaryRegion()
-        region[hCo(0), hCo(0), 1] = BlockType.GRASS
-        assertEquals(BlockType.GRASS, region[hCo(0), hCo(0), 1])
+        val region = Region()
+        region[hCo(0), hCo(0), 1] = BlockType.SOIL_WITH_GRASS
+        assertEquals(BlockType.SOIL_WITH_GRASS, region[hCo(0), hCo(0), 1])
         region[hCo(231), hCo(49382), 52] = BlockType.GRAVEL
         assertEquals(BlockType.GRAVEL, region[hCo(231), hCo(49382), 52])
     }
@@ -71,20 +78,20 @@ internal class BinaryRegionTest {
     @Test
     fun `reading and writing to stream works`() {
         // Expecting one region file to be exactly 64 MB. If block/chunk/region sizes change, update this test.
-        assertEquals(64 * 1024 * 1024, BinaryRegion.DISK_REGION_SIZE_BYTES)
+        assertEquals(64 * 1024 * 1024, DISK_REGION_SIZE_BYTES)
 
-        val savedRegion = BinaryRegion()
-        val loadedRegion = BinaryRegion()
+        val savedRegion = Region()
+        val loadedRegion = Region()
 
-        for (x in 0 until BinaryRegion.REGION_LENGTH_BLOCKS) {
-            for (z in 0 until BinaryRegion.REGION_LENGTH_BLOCKS) {
-                for (y in 0 until BinaryChunk.CHUNK_HEIGHT_BLOCKS) {
+        for (x in 0 until REGION_LENGTH_BLOCKS) {
+            for (z in 0 until REGION_LENGTH_BLOCKS) {
+                for (y in 0 until WORLD_HEIGHT_BLOCKS) {
                     savedRegion.set(x = hCo(x), z = hCo(z), y = y, value = Random.nextBlock())
                 }
             }
         }
 
-        with(ByteArrayOutputStream(BinaryRegion.DISK_REGION_SIZE_BYTES)) {
+        with(ByteArrayOutputStream(DISK_REGION_SIZE_BYTES)) {
             savedRegion.write(this)
             loadedRegion.read(ByteArrayInputStream(toByteArray()))
         }
@@ -92,28 +99,28 @@ internal class BinaryRegionTest {
         val savedRegionIterator = savedRegion.iterator()
         val loadedRegionIterator = loadedRegion.iterator()
 
-        repeat(BinaryRegion.REGION_SIZE_BLOCKS) {
+        repeat(REGION_SIZE_BLOCKS) {
             assertEquals(savedRegionIterator.next(), loadedRegionIterator.next())
         }
     }
 
     @Test
     fun `iterator iterates chunk-by-chunk returning all chunks of the same Z first before increasing X`() {
-        val region = BinaryRegion()
+        val region = Region()
 
         // create a list of random blocks to use for validation (only create as many values as needed)
-        val totalBlocksToCheck = BinaryChunk.CHUNK_SIZE_BLOCKS * 4 // generating for a 2x2 region only
+        val totalBlocksToCheck = CHUNK_SIZE_BLOCKS * 4 // generating for a 2x2 region only
         val randomBlockValues = (0 until totalBlocksToCheck)
-            .map { Random.nextBlock().binaryValue }
+            .map { Random.nextBlock().value }
             .toByteArray()
 
         // apply random blocks to a chosen area of chunks (2 x 2), keeping everything around them empty
         with(randomBlockValues.iterator()) {
             for (chunkX in 1 ..2) {
                 for (chunkZ in 2..3) {
-                    for (localX in 0 until BinaryChunk.CHUNK_LENGTH_BLOCKS) {
-                        for (localZ in 0 until BinaryChunk.CHUNK_LENGTH_BLOCKS) {
-                            for (y in 0 until BinaryChunk.CHUNK_HEIGHT_BLOCKS) {
+                    for (localX in 0 until CHUNK_LENGTH_BLOCKS) {
+                        for (localZ in 0 until CHUNK_LENGTH_BLOCKS) {
+                            for (y in 0 until WORLD_HEIGHT_BLOCKS) {
                                 region.set(
                                     x = HorizontalCoordinate(0, chunkX, localX),
                                     z = HorizontalCoordinate(0, chunkZ, localZ),
@@ -132,7 +139,7 @@ internal class BinaryRegionTest {
         // check the values returned by the region iterator.
         val expectedValuesIterator = randomBlockValues.iterator()
         val regionIterator = region.iterator()
-        for (chunkZ in 0 until BinaryRegion.REGION_LENGTH_CHUNKS) { // all chunks of chunkX = 0 should be empty
+        for (chunkZ in 0 until REGION_LENGTH_CHUNKS) { // all chunks of chunkX = 0 should be empty
             assertEmptyChunk(regionIterator)
         }
         for (chunkZ in 0 .. 1) { // if chunkX = 1, then chunkZ {0, 1} should be empty
@@ -141,7 +148,7 @@ internal class BinaryRegionTest {
         for (chunkZ in 2 .. 3) { // if chunkX = 1, then chunkZ {2, 3} are the first two chunks with set values
             assertSetBytes(expectedValuesIterator, regionIterator)
         }
-        for (chunkZ in 4 until BinaryRegion.REGION_LENGTH_CHUNKS) { // all the rest of the chunks of chunkX = 1
+        for (chunkZ in 4 until REGION_LENGTH_CHUNKS) { // all the rest of the chunks of chunkX = 1
             assertEmptyChunk(regionIterator)
         }
         for (chunkZ in 0 .. 1) { // if chunkX = 2, then chunkZ {0, 1} should be empty
@@ -155,13 +162,13 @@ internal class BinaryRegionTest {
     }
 
     private fun assertSetBytes(expectedValuesIterator: ByteIterator, regionIterator: Iterator<Block>) {
-        repeat(BinaryChunk.CHUNK_SIZE_BLOCKS) {
-            assertEquals(expectedValuesIterator.next(), regionIterator.next().type.binaryValue)
+        repeat(CHUNK_SIZE_BLOCKS) {
+            assertEquals(expectedValuesIterator.next(), regionIterator.next().type.value)
         }
     }
 
     private fun assertEmptyChunk(regionIterator: Iterator<Block>) {
-        repeat(BinaryChunk.CHUNK_SIZE_BLOCKS) { assertEquals(BlockType.NONE, regionIterator.next().type) }
+        repeat(CHUNK_SIZE_BLOCKS) { assertEquals(BlockType.NONE, regionIterator.next().type) }
     }
 
     private fun hCo(i: Int) = HorizontalCoordinate(i)

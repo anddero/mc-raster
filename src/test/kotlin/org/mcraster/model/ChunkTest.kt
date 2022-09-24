@@ -1,0 +1,46 @@
+package org.mcraster.model
+
+import org.mcraster.model.Limits.WORLD_HEIGHT_BLOCKS
+import kotlin.test.Test
+import kotlin.test.assertEquals
+
+internal class ChunkTest {
+
+    @Test
+    fun `all values initialized correctly`() {
+        val chunk = Chunk()
+        chunk.forEach {
+            assertEquals(BlockType.NONE, it.type)
+        }
+    }
+
+    @Test
+    fun `get and set work on the same element`() {
+        val chunk = Chunk()
+        chunk[BlockPos(0, 0, 0)] = BlockType.SOIL_WITH_GRASS
+        assertEquals(BlockType.SOIL_WITH_GRASS, chunk[BlockPos(0, 0, 0)])
+        chunk[BlockPos(x = 3, y = 4, z = 5)] = BlockType.GRAVEL
+        assertEquals(BlockType.GRAVEL, chunk[BlockPos(x = 3, y = 4, z = 5)])
+    }
+
+    @Test
+    fun `iterator iterates through elements Y first, then Z, then X`() {
+        val chunkIterator = Chunk().iterator()
+        for (i in 0 until WORLD_HEIGHT_BLOCKS) {
+            val block = chunkIterator.next()
+            assertEquals(0, block.point.x)
+            assertEquals(0, block.point.z)
+            assertEquals(i, block.point.y)
+        }
+        var block = chunkIterator.next()
+        assertEquals(0, block.point.x)
+        assertEquals(1, block.point.z)
+        assertEquals(0, block.point.y)
+
+        block = chunkIterator.next()
+        assertEquals(0, block.point.x)
+        assertEquals(1, block.point.z)
+        assertEquals(1, block.point.y)
+    }
+
+}
