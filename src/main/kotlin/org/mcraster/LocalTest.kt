@@ -21,9 +21,10 @@ object LocalTest {
         val seaLevelBlockBottomY = MC_SEA_BLOCK_LEVEL
         val inputFilesDir = "input-resources/customArea1"
         val outputModelsDir = "output-models"
+        val modelAndWorldName = "CustomArea1-Debug"
 
         val spawnPosDataSource = DataSourceDescriptor(
-            path = "$inputFilesDir/spawn.xyz",
+            path = "$inputFilesDir/debug-spawn.txt",
             type = RELATIVE_FILE,
             format = LINES_LEST97_YXH_DOUBLE,
             pointConversionStrategy = BOUNDING_HORIZONTALLY_BUT_VERTICALLY_ROUNDED_TOWARDS_TOP_OF_BLOCK,
@@ -31,13 +32,13 @@ object LocalTest {
             softValidateBlockLimits = true
         ).asDataSource()
         val heightMapDataSource = DataSourceDescriptor(
-            path = "$inputFilesDir/heightmap.xyz",
+            path = "$inputFilesDir/debug-heightmap.txt",
             type = RELATIVE_FILE,
             format = LINES_LEST97_YXH_DOUBLE,
             pointConversionStrategy = BOUNDING_HORIZONTALLY_BUT_VERTICALLY_ROUNDED_TOWARDS_TOP_OF_BLOCK,
             seaLevelBlockBottomY = seaLevelBlockBottomY,
             softValidateBlockLimits = true,
-            blockFilter = loadHeightMapFilter("$inputFilesDir/minMaxFilter.xyz")
+//            blockFilter = loadHeightMapFilter("$inputFilesDir/minMaxFilter.xyz")
         ).asDataSource()
         val markerPolesDataSource = DataSourceDescriptor(
             path = "$inputFilesDir/poles.xyz",
@@ -46,7 +47,7 @@ object LocalTest {
             pointConversionStrategy = BOUNDING_HORIZONTALLY_BUT_VERTICALLY_ROUNDED_TOWARDS_TOP_OF_BLOCK,
             seaLevelBlockBottomY = seaLevelBlockBottomY,
             softValidateBlockLimits = true
-        ).asDataSource()
+        ).asDataSource().filter { false }
         val waterPoolDataSource = DataSourceDescriptor(
             path = "$inputFilesDir/pools.xyz",
             type = RELATIVE_FILE,
@@ -54,10 +55,10 @@ object LocalTest {
             pointConversionStrategy = BOUNDING_HORIZONTALLY_BUT_VERTICALLY_ROUNDED_TOWARDS_TOP_OF_BLOCK,
             seaLevelBlockBottomY = seaLevelBlockBottomY,
             softValidateBlockLimits = true
-        ).asDataSource()
+        ).asDataSource().filter { false }
 
         val worldConfig = WorldConfig(
-            worldName = "CustomArea1",
+            worldName = modelAndWorldName,
             generator = WorldConfig.GeneratorType.FLAT,
             layers = listOf(
                 WorldConfig.Layer(BlockType.UNBREAKABLE_STONE, 0, 0),
@@ -70,7 +71,7 @@ object LocalTest {
             gameType = WorldConfig.GameType.CREATIVE
         )
 
-        val model = DiskBoundModel(File("$outputModelsDir/CustomArea1"))
+        val model = DiskBoundModel(File("$outputModelsDir/$modelAndWorldName"), true)
         model.maxCacheSizeMB = 5120
         val diskBoundModel = DiskBoundModelBuilder.build(
             model = model,

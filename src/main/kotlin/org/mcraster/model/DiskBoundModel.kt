@@ -21,10 +21,14 @@ import java.util.zip.GZIPOutputStream
  * contained in that directory and will interact with its data as expected - so progress can be saved and shared among
  * instances of the program.
  *
+ * The model will be bound to the specified directory. If overwrite is set to true, the existing model data
+ * in the directory will be removed on initialization. The directory and any unrecognized files (files with names not
+ * matching region file name pattern) in the directory will not be removed.
+ *
  * The disk is not updated immediately after every change, make sure to call flush() to ensure all changes reach the
  * disk.
  */
-class DiskBoundModel(private val directory: File) : Iterable<Block> {
+class DiskBoundModel(private val directory: File, overwrite: Boolean = false) : Iterable<Block> {
 
     private val regionsByIndex = object : CachedMap<RegionIndex, Region>(DEFAULT_MAX_CACHE_SIZE_MB) {
         override fun getCacheLineSizeMB() = DISK_REGION_SIZE_MB_APPROX
@@ -40,6 +44,17 @@ class DiskBoundModel(private val directory: File) : Iterable<Block> {
     init {
         if (directory.exists()) {
             if (!directory.isDirectory) throw RuntimeException("Not a directory: $directory")
+            if (overwrite) {
+                println("Overwrite mode is set, removing all existing region files")
+                val allModelRegionIndices = getAllModelRegionIndices()
+                println("Found ${allModelRegionIndices.size} existing region files")
+                allModelRegionIndices.forEach { regionIndex ->
+                    val regionFile = getRegionFile(regionIndex)
+                    if (regionFile.delete()) {
+                        println("Removed existing region file: $regionFile")
+                    } else throw RuntimeException("Failed to remove region file: $regionFile")
+                }
+            }
         } else if (!directory.mkdirs()) throw RuntimeException("Failed to create directory: $directory")
     }
 
@@ -60,8 +75,8 @@ class DiskBoundModel(private val directory: File) : Iterable<Block> {
 
     private fun getAllModelRegionIndices(): Set<RegionIndex> {
         val regionIndices = regionsByIndex.getCacheLineKeys().toMutableSet()
-        val regionFileNames = directory.list() ?: throw RuntimeException("Failed to list region files in model dir")
-        regionFileNames.forEach { fileName ->
+        val dirFileNames = directory.list() ?: throw RuntimeException("Failed to list region files in model dir")
+        dirFileNames.forEach { fileName ->
             val match = regionFileNameRegex.matchEntire(fileName)
             if (match != null) {
                 match.groupValues
@@ -75,28 +90,30 @@ class DiskBoundModel(private val directory: File) : Iterable<Block> {
     }
 
     private fun loadRegionFileFromDisk(key: RegionIndex): Region {
-        val regionFile = File(directory, getRegionFileName(key))
+        val regionFile = getRegionFile(key)
         val newRegion = Region()
         if (regionFile.exists()) {
             if (regionFile.isFile) {
                 FileInputStream(regionFile).use { fileInputStream ->
                     GZIPInputStream(fileInputStream).use { newRegion.read(it) }
                 }
+                println("Loaded region file: $regionFile")
             } else throw RuntimeException("Cannot read region file: " + regionFile.absolutePath)
         }
-        println("Loaded region file: $regionFile")
         return newRegion
     }
 
     private fun ensureRegionFileSavedToDisk(regionIndex: RegionIndex, region: Region) {
         if (region.isChangedAfterCreateLoadOrSave) {
-            val regionFile = File(directory, getRegionFileName(regionIndex))
+            val regionFile = getRegionFile(regionIndex)
             FileOutputStream(regionFile, false).use { fileOutputStream ->
                 GZIPOutputStream(fileOutputStream).use { region.write(it) }
             }
             println("Written region file: $regionFile")
         }
     }
+
+    private fun getRegionFile(regionIndex: RegionIndex) = File(directory, getRegionFileName(regionIndex))
 
     private class BinaryModelIterator(model: DiskBoundModel) : Iterator<Block> {
         private val regionIterator: Iterator<Pair<RegionIndex, Iterator<RegionLocalBlock>>>

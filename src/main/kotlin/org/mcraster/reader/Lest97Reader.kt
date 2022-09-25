@@ -9,13 +9,13 @@ import java.io.File
 
 object Lest97Reader {
 
-    fun linesLest97YxhDouble(
+    fun linesLest97YxhDecimal(
         file: File,
         pointConversionStrategy: PointConversionStrategy,
         seaLevelBlockBottomY: Int
     ): DataSource<BlockPos> {
         val pointsLEst97 = file.asLinesDataSource()
-            .map { yxhLine -> yxhLine.split(" ").map { it.toDouble() } }
+            .map { yxhLine -> yxhLine.split(" ").map { it.toBigDecimal() } }
             .map { lest97yxh -> PointLEst97(lest97yxh[1], lest97yxh[0], lest97yxh[2]) }
         val blockPositionsLEst97 = when(pointConversionStrategy) {
             PointConversionStrategy.BOUNDING_BLOCK -> pointsLEst97.map { it.getBoundingBlock() }

@@ -1,7 +1,9 @@
 package org.mcraster.converters
 
 import org.mcraster.model.BlockPos
-import kotlin.math.roundToInt
+import org.mcraster.util.NumberUtils.roundDownToIntExact
+import org.mcraster.util.NumberUtils.roundToIntHalfUpExact
+import java.math.BigDecimal
 
 /**
  * X and Y stand for coordinates from the L-EST97 system, H stands for height from sea level (bottom -1, top 0).
@@ -23,10 +25,10 @@ class BlockPosLEst97(val x: Int, val y: Int, val h: Int) {
     )
 
     companion object {
-        fun fromPointOnBlock(x: Double, y: Double, h: Double) =
-            BlockPosLEst97(x = x.toInt(), y = y.toInt(), h = h.toInt())
-        fun fromPointOnBlockWithClosestRealisticHeight(x: Double, y: Double, h: Double) =
-            BlockPosLEst97(x = x.toInt(), y = y.toInt(), h = h.roundToInt() - 1)
+        fun fromPointOnBlock(x: BigDecimal, y: BigDecimal, h: BigDecimal) =
+            BlockPosLEst97(x = x.roundDownToIntExact(), y = y.roundDownToIntExact(), h = h.roundDownToIntExact())
+        fun fromPointOnBlockWithClosestRealisticHeight(x: BigDecimal, y: BigDecimal, h: BigDecimal) =
+            BlockPosLEst97(x = x.roundDownToIntExact(), y = y.roundDownToIntExact(), h = h.roundToIntHalfUpExact() - 1)
     }
 
 }

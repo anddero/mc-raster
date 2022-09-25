@@ -2,7 +2,7 @@ package org.mcraster.reader
 
 import org.mcraster.model.BlockPos
 import org.mcraster.model.Limits.isWithinLimits
-import org.mcraster.reader.Lest97Reader.linesLest97YxhDouble
+import org.mcraster.reader.Lest97Reader.linesLest97YxhDecimal
 import org.mcraster.util.DataSource
 import java.io.File
 
@@ -22,7 +22,7 @@ class DataSourceDescriptor(
         }
         var data: DataSource<BlockPos> = when(format) {
             DataFormat.LINES_LEST97_YXH_DOUBLE ->
-                linesLest97YxhDouble(source, pointConversionStrategy, seaLevelBlockBottomY)
+                linesLest97YxhDecimal(source, pointConversionStrategy, seaLevelBlockBottomY)
         }
         blockFilter?.let { data = data.filter(it) }
         if (softValidateBlockLimits) {
