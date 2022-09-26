@@ -1,5 +1,6 @@
 package org.mcraster.converters
 
+import org.mcraster.converters.BlockPosLEst97.PointLEst97
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -76,11 +77,7 @@ internal class BlockPosLEst97Test {
         assertEquals(0, b.y)
         assertEquals(-1, b.h)
 
-        p = PointLEst97(
-            x = "-128734.231".toBigDecimal(),
-            y = "-2873.93".toBigDecimal(),
-            h = "-192.5".toBigDecimal()
-        )
+        p = PointLEst97(x = "-128734.231".toBigDecimal(), y = "-2873.93".toBigDecimal(), h = "-192.5".toBigDecimal())
         b = p.getBoundingBlock()
         assertEquals(-128735, b.x)
         assertEquals(-2874, b.y)

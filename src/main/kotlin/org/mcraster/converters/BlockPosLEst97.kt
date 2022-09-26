@@ -16,7 +16,7 @@ import java.math.BigDecimal
  *      The West-facing side would be y = 8, but the East-facing side y = 9. Center y = 8.5.
  *      The ground-facing side would be h = 20, but the sky-facing side h = 21. Center h = 20.5.
  */
-class BlockPosLEst97(val x: Int, val y: Int, val h: Int) {
+data class BlockPosLEst97(val x: Int, val y: Int, val h: Int) {
 
     fun toBlockPos(seaLevelBlockBottomY: Int) = BlockPos(
         x = y,
@@ -24,11 +24,14 @@ class BlockPosLEst97(val x: Int, val y: Int, val h: Int) {
         z = -x - 1
     )
 
-    companion object {
-        fun fromPointOnBlock(x: BigDecimal, y: BigDecimal, h: BigDecimal) =
+    data class PointLEst97(val x: BigDecimal, val y: BigDecimal, val h: BigDecimal) {
+
+        fun getBoundingBlock() =
             BlockPosLEst97(x = x.roundDownToIntExact(), y = y.roundDownToIntExact(), h = h.roundDownToIntExact())
-        fun fromPointOnBlockWithClosestRealisticHeight(x: BigDecimal, y: BigDecimal, h: BigDecimal) =
+
+        fun getBoundingHorizontallyButVerticallyRoundedTowardsTopOfBlock() =
             BlockPosLEst97(x = x.roundDownToIntExact(), y = y.roundDownToIntExact(), h = h.roundToIntHalfUpExact() - 1)
+
     }
 
 }

@@ -1,6 +1,6 @@
 package org.mcraster.reader
 
-import org.mcraster.converters.PointLEst97
+import org.mcraster.converters.BlockPosLEst97.PointLEst97
 import org.mcraster.model.BlockPos
 import org.mcraster.reader.DataSourceDescriptor.PointConversionStrategy
 import org.mcraster.util.DataSource
