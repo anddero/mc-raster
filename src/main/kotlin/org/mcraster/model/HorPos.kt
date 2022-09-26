@@ -6,7 +6,7 @@ import org.mcraster.model.Limits.REGION_LENGTH_CHUNKS
 /**
  * Represents the horizontal position (x or z) globally and its chunk and region indices to which the position belongs.
  */
-class HorPos(val block: Int) {
+data class HorPos(val block: Int) {
 
     constructor(region: Int, localChunk: Int, localBlock: Int)
             : this(block = (region * REGION_LENGTH_CHUNKS + localChunk) * CHUNK_LENGTH_BLOCKS + localBlock)

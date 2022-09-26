@@ -1,5 +1,7 @@
 package org.mcraster.model
 
+import java.math.BigDecimal
+
 /**
  * In our model representation, these coordinates should be interpreted as follows:
  *      X increases towards East and decreases towards West.
@@ -46,6 +48,16 @@ data class BlockPos(val x: Int, val y: Int, val z: Int) {
             y = this.y,
             z = regionZ * Limits.REGION_LENGTH_BLOCKS + this.z
         )
+
+    }
+
+    data class HorPoint(val x: BigDecimal, val z: BigDecimal)
+
+    data class HorVector(val src: HorPoint, val dest: HorPoint)
+
+    data class HorRect(val min: HorPoint, val max: HorPoint) {
+
+        fun contains(point: HorPoint) = point.x >= min.x && point.x <= max.x && point.z >= min.z && point.z <= max.z
 
     }
 
