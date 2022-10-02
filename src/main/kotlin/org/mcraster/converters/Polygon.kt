@@ -21,36 +21,6 @@ class Polygon(
             outerShellPolygonCorners = polygon.getOuterShellPolygonCorners(offset = center),
             polygonCornersOfHoles = polygon.getPolygonCornersOfHoles(offset = center)
         )
-        // Maybe would be safer to crop by four lines individually, creating new polygons with each crop
-        /*val newPoints = mutableListOf<HorPoint>()
-        var prevOriginalPoint = points.last()
-        var prevOriginalPointInside = container.contains(prevOriginalPoint)
-        points.forEach { point ->
-            val pointInside = container.contains(point)
-            if (pointInside) {
-                if (!prevOriginalPointInside) {
-                    newPoints.add(container.intersectionPoints(HorVector(prevOriginalPoint, point)).single())
-                }
-                newPoints.add(point)
-            }
-            else {
-                if (prevOriginalPointInside) {
-                    newPoints.add(container.intersectionPoints(HorVector(prevOriginalPoint, point)).single())
-                } else {
-                    val vector = HorVector(prevOriginalPoint, point)
-                    val intersectionPoints = container.intersectionPoints(vector)
-                    if (intersectionPoints.isNotEmpty() && intersectionPoints.size != 2) {
-                        throw RuntimeException("If two consecutive points outside of the rectangle, " +
-                                "expected exactly 0 or 2 intersections, but found ${intersectionPoints.size}. " +
-                                "Container $container, vector $vector, intersections $intersectionPoints")
-                    }
-                    newPoints.addAll(intersectionPoints)
-                }
-            }
-            prevOriginalPoint = point
-            prevOriginalPointInside = pointInside
-        }
-        return Polygon(newPoints)*/
     }
 
     private val center: HorPoint
