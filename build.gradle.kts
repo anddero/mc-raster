@@ -16,9 +16,11 @@ repositories {
 }
 
 val geotoolsVersion = "26.1"
+val jtsVersion = "1.19.0"
 dependencies {
     testImplementation(kotlin("test"))
     implementation("org.geotools:gt-shapefile:$geotoolsVersion")
+    implementation("org.locationtech.jts:jts-core:$jtsVersion")
     implementation(files("libs/J2Blocks.jar"))
 //    testImplementation("org.junit.jupiter:junit-jupiter:5.9.0")
 //    implementation(files("libs/minecraft-server.jar"))
