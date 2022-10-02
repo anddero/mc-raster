@@ -18,11 +18,20 @@ class ShapefileReader { // Shapefile (.shp) reading capability
             while (it.hasNext()) {
                 val feature = it.next()
                 val sourceGeometry = feature.defaultGeometryProperty
-                println("Read ${sourceGeometry.name} ${sourceGeometry.type} ${sourceGeometry.value}")
+                sourceGeometry.descriptor
+                sourceGeometry.identifier
+                sourceGeometry.userData
+                println("Read \n\t" +
+                        "name: ${sourceGeometry.name}\n\t" +
+                        "type: ${sourceGeometry.type}\n\t" +
+                        "value: ${sourceGeometry.value}\n\t" +
+                        "bounds: ${sourceGeometry.bounds}\n\t" +
+                        "descriptor: ${sourceGeometry.descriptor}\n\t" +
+                        "identifier: ${sourceGeometry.identifier}\n\t" +
+                        "userData: ${sourceGeometry.userData}")
             }
             it.close()
         }
     }
-//    EXAMPLE: ShapefileReader().read("local-data/Topo250T_Maaamet_SHP/Vooluvesi.shp") // works
 
 }
