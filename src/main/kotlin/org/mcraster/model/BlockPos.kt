@@ -19,17 +19,39 @@ import java.math.BigDecimal
  */
 data class BlockPos(val x: Int, val y: Int, val z: Int) {
 
-    private val posX get() = HorPos(x)
-    private val posZ get() = HorPos(z)
+    val regionX get() = getRegionIndex(globalBlockIndex = x)
+    val regionZ get() = getRegionIndex(globalBlockIndex = z)
 
-    val regionX get() = posX.region
-    val regionZ get() = posZ.region
+    val localChunkX get() = getLocalChunkIndex(globalBlockIndex = x)
+    val localChunkZ get() = getLocalChunkIndex(globalBlockIndex = z)
 
-    val localChunkX get() = posX.localChunk
-    val localChunkZ get() = posZ.localChunk
+    val localBlockX get() = getLocalBlockIndex(globalBlockIndex = x)
+    val localBlockZ get() = getLocalBlockIndex(globalBlockIndex = z)
 
-    val localBlockX get() = posX.localBlock
-    val localBlockZ get() = posZ.localBlock
+    companion object {
+
+        fun getGlobalBlockIndex(regionIndex: Int, localChunkIndex: Int, localBlockIndex: Int) =
+            (regionIndex * Limits.REGION_LENGTH_CHUNKS + localChunkIndex) * Limits.CHUNK_LENGTH_BLOCKS +
+                    localBlockIndex
+
+        fun getGlobalChunkIndex(globalBlockIndex: Int): Int {
+            return if (globalBlockIndex >= 0) globalBlockIndex / Limits.CHUNK_LENGTH_BLOCKS
+            else (globalBlockIndex + 1) / Limits.CHUNK_LENGTH_BLOCKS - 1
+        }
+
+        fun getRegionIndex(globalBlockIndex: Int): Int {
+            val globalChunkIndex = getGlobalChunkIndex(globalBlockIndex = globalBlockIndex)
+            return if (globalChunkIndex >= 0) globalChunkIndex / Limits.REGION_LENGTH_CHUNKS
+            else (globalChunkIndex + 1) / Limits.REGION_LENGTH_CHUNKS - 1
+        }
+
+        fun getLocalChunkIndex(globalBlockIndex: Int) = getGlobalChunkIndex(globalBlockIndex = globalBlockIndex) -
+                getRegionIndex(globalBlockIndex = globalBlockIndex) * Limits.REGION_LENGTH_CHUNKS
+
+        fun getLocalBlockIndex(globalBlockIndex: Int) = globalBlockIndex -
+                getGlobalChunkIndex(globalBlockIndex = globalBlockIndex) * Limits.CHUNK_LENGTH_BLOCKS
+
+    }
 
     data class ChunkLocalBlockPos(val x: Int, val y: Int, val z: Int) {
 
@@ -52,8 +74,6 @@ data class BlockPos(val x: Int, val y: Int, val z: Int) {
     }
 
     data class HorPoint(val x: BigDecimal, val z: BigDecimal)
-
-    data class HorVector(val src: HorPoint, val dest: HorPoint)
 
     data class HorRect(val min: HorPoint, val max: HorPoint) {
 

@@ -1,6 +1,7 @@
 package org.mcraster.model
 
 import org.mcraster.model.Block.RegionLocalBlock
+import org.mcraster.model.BlockPos.Companion.getGlobalBlockIndex
 import org.mcraster.model.Limits.MODEL_HEIGHT_BLOCKS
 import org.mcraster.model.Limits.CHUNK_LENGTH_BLOCKS
 import org.mcraster.model.Limits.CHUNK_SIZE_BLOCKS
@@ -135,10 +136,18 @@ internal class RegionTest {
                     for (localX in 0 until CHUNK_LENGTH_BLOCKS) {
                         for (localZ in 0 until CHUNK_LENGTH_BLOCKS) {
                             for (y in 0 until MODEL_HEIGHT_BLOCKS) {
-                                val x = HorPos(0, chunkX, localX)
-                                val z = HorPos(0, chunkZ, localZ)
+                                val x = getGlobalBlockIndex(
+                                    regionIndex = 0,
+                                    localChunkIndex = chunkX,
+                                    localBlockIndex = localX
+                                )
+                                val z = getGlobalBlockIndex(
+                                    regionIndex = 0,
+                                    localChunkIndex = chunkZ,
+                                    localBlockIndex = localZ
+                                )
                                 region.setBlock(
-                                    pos = BlockPos(x = x.block, z = z.block, y = y),
+                                    pos = BlockPos(x = x, z = z, y = y),
                                     value = BlockType[next()]
                                 )
                             }

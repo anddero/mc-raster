@@ -1,11 +1,16 @@
 package org.mcraster.model
 
+import org.mcraster.model.BlockPos.Companion.getGlobalBlockIndex
+import org.mcraster.model.BlockPos.Companion.getGlobalChunkIndex
+import org.mcraster.model.BlockPos.Companion.getLocalBlockIndex
+import org.mcraster.model.BlockPos.Companion.getLocalChunkIndex
+import org.mcraster.model.BlockPos.Companion.getRegionIndex
 import org.mcraster.model.Limits.CHUNK_LENGTH_BLOCKS
 import org.mcraster.model.Limits.REGION_LENGTH_CHUNKS
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-internal class HorPosTest {
+internal class BlockPosTest {
 
     @Test
     fun `test positive values are correctly calculated`() {
@@ -32,16 +37,18 @@ internal class HorPosTest {
         )
 
         actualValues.forEach { arr ->
-            val coord = HorPos(arr.globalBlock)
             assertEquals(
                 arr.globalBlock,
-                HorPos(region = arr.region, localChunk = arr.localChunk, localBlock = arr.localBlock)
-                    .block
+                getGlobalBlockIndex(
+                    regionIndex = arr.region,
+                    localChunkIndex = arr.localChunk,
+                    localBlockIndex = arr.localBlock
+                )
             )
-            assertEquals(arr.globalChunk, coord.globalChunk)
-            assertEquals(arr.region, coord.region)
-            assertEquals(arr.localChunk, coord.localChunk)
-            assertEquals(arr.localBlock, coord.localBlock)
+            assertEquals(arr.globalChunk, getGlobalChunkIndex(arr.globalBlock))
+            assertEquals(arr.region, getRegionIndex(arr.globalBlock))
+            assertEquals(arr.localChunk, getLocalChunkIndex(arr.globalBlock))
+            assertEquals(arr.localBlock, getLocalBlockIndex(arr.globalBlock))
             assertEquals(arr.globalChunk, arr.region * REGION_LENGTH_CHUNKS + arr.localChunk)
             assertEquals(arr.globalBlock, arr.globalChunk * CHUNK_LENGTH_BLOCKS + arr.localBlock)
         }
@@ -70,12 +77,18 @@ internal class HorPosTest {
         )
 
         actualValues.forEach { arr ->
-            val coord = HorPos(arr.globalBlock)
-            assertEquals(arr.globalBlock, HorPos(arr.region, arr.localChunk, arr.localBlock).block)
-            assertEquals(arr.globalChunk, coord.globalChunk)
-            assertEquals(arr.region, coord.region)
-            assertEquals(arr.localChunk, coord.localChunk)
-            assertEquals(arr.localBlock, coord.localBlock)
+            assertEquals(
+                arr.globalBlock,
+                getGlobalBlockIndex(
+                    regionIndex = arr.region,
+                    localChunkIndex = arr.localChunk,
+                    localBlockIndex = arr.localBlock
+                )
+            )
+            assertEquals(arr.globalChunk, getGlobalChunkIndex(arr.globalBlock))
+            assertEquals(arr.region, getRegionIndex(arr.globalBlock))
+            assertEquals(arr.localChunk, getLocalChunkIndex(arr.globalBlock))
+            assertEquals(arr.localBlock, getLocalBlockIndex(arr.globalBlock))
             assertEquals(arr.globalChunk, arr.region * REGION_LENGTH_CHUNKS + arr.localChunk)
             assertEquals(arr.globalBlock, arr.globalChunk * CHUNK_LENGTH_BLOCKS + arr.localBlock)
         }
