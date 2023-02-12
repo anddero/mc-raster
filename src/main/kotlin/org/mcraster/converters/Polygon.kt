@@ -1,6 +1,7 @@
 package org.mcraster.converters
 
 import org.locationtech.jts.geom.Coordinate
+import org.locationtech.jts.geom.GeometryCollection
 import org.locationtech.jts.geom.GeometryFactory
 import org.locationtech.jts.geom.LinearRing
 import org.locationtech.jts.geom.PrecisionModel
@@ -15,12 +16,24 @@ class Polygon(
     private val polygonCornersOfHoles: List<List<HorPoint>>
 ) {
 
-    fun crop(container: HorRect): Polygon {
-        val polygon = zeroCenterPolygon.intersection(container.toZeroCenterJtsPolygon(center)) as JtsPolygon
-        return Polygon(
-            outerShellPolygonCorners = polygon.getOuterShellPolygonCorners(offset = center),
-            polygonCornersOfHoles = polygon.getPolygonCornersOfHoles(offset = center)
-        )
+    fun crop(container: HorRect): List<Polygon> {
+        val geometry = zeroCenterPolygon.intersection(container.toZeroCenterJtsPolygon(center))
+        val polygons = when (geometry) {
+            is JtsPolygon -> listOf(geometry)
+            is GeometryCollection -> {
+                (0 until geometry.numGeometries)
+                    .map { geometry.getGeometryN(it) }
+                    .map { it as JtsPolygon }
+                    .toList()
+            }
+            else -> throw RuntimeException("Unhandled geometry type: ${geometry.geometryType}")
+        }
+        return polygons.map {
+            Polygon(
+                outerShellPolygonCorners = it.getOuterShellPolygonCorners(offset = center),
+                polygonCornersOfHoles = it.getPolygonCornersOfHoles(offset = center)
+            )
+        }
     }
 
     private val center: HorPoint
