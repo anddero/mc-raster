@@ -26,14 +26,16 @@ class Polygon(
                     .map { it as JtsPolygon }
                     .toList()
             }
+
             else -> throw RuntimeException("Unhandled geometry type: ${geometry.geometryType}")
         }
-        return polygons.map {
-            Polygon(
-                outerShellPolygonCorners = it.getOuterShellPolygonCorners(offset = center),
-                polygonCornersOfHoles = it.getPolygonCornersOfHoles(offset = center)
-            )
-        }
+        return polygons.filter { !it.isEmpty }
+            .map {
+                Polygon(
+                    outerShellPolygonCorners = it.getOuterShellPolygonCorners(offset = center),
+                    polygonCornersOfHoles = it.getPolygonCornersOfHoles(offset = center)
+                )
+            }
     }
 
     fun getOuterShell() = zeroCenterPolygon.getOuterShellPolygonCorners(offset = center)

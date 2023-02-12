@@ -156,6 +156,17 @@ class PolygonTest {
     }
 
     @Test
+    fun cropPolygonIntoNothing() {
+        val rect = listOf(p(0.0, 0.0), p(0.0, 1.0), p(1.0, 1.0), p(1.0, 0.0))
+        val cropRect = BlockPos.HorRect(p(5.0, 5.0), p(6.0, 6.0))
+
+        val polygon = Polygon(outerShellPolygonCorners = rect, polygonCornersOfHoles = emptyList())
+        val croppedList = polygon.crop(cropRect)
+
+        assertTrue { croppedList.isEmpty() }
+    }
+
+    @Test
     fun cropRectangleInHalfByExactBounds() {
         val rect = listOf(p(0.0, 0.0), p(0.0, 1.0), p(1.0, 1.0), p(1.0, 0.0))
         val cropRectLeft = BlockPos.HorRect(p(0.0, 0.0), p(0.5, 1.0))
