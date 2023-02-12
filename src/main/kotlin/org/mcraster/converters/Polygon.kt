@@ -12,8 +12,8 @@ import java.math.BigDecimal
 import org.locationtech.jts.geom.Polygon as JtsPolygon
 
 class Polygon(
-    private val outerShellPolygonCorners: List<HorPoint>,
-    private val polygonCornersOfHoles: List<List<HorPoint>>
+    outerShellPolygonCorners: List<HorPoint>,
+    polygonCornersOfHoles: List<List<HorPoint>>
 ) {
 
     fun crop(container: HorRect): List<Polygon> {
@@ -35,6 +35,10 @@ class Polygon(
             )
         }
     }
+
+    fun getOuterShell() = zeroCenterPolygon.getOuterShellPolygonCorners(offset = center)
+
+    fun getHoles() = zeroCenterPolygon.getPolygonCornersOfHoles(offset = center)
 
     private val center: HorPoint
     private val zeroCenterPolygon: JtsPolygon // x,y in JtsPolygon corresponds to x,z in model
