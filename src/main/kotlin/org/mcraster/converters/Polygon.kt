@@ -42,6 +42,10 @@ class Polygon(
 
     fun getHoles() = zeroCenterPolygon.getPolygonCornersOfHoles(offset = center)
 
+    override fun toString(): String {
+        return "Polygon(center=$center, zeroCenterPolygon=$zeroCenterPolygon)"
+    }
+
     private val center: HorPoint
     private val zeroCenterPolygon: JtsPolygon // x,y in JtsPolygon corresponds to x,z in model
 
