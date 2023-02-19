@@ -1,6 +1,8 @@
 package org.mcraster.converters
 
+import org.mcraster.converters.BlockPosLEst97.HorPointLEst97
 import org.mcraster.converters.BlockPosLEst97.PointLEst97
+import java.math.BigDecimal
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -115,6 +117,26 @@ internal class BlockPosLEst97Test {
         assertEquals(-128735, b.x)
         assertEquals(-2874, b.y)
         assertEquals(-193, b.h)
+    }
+
+    @Test
+    fun horPointLEst97ToHorPoint() {
+        var p = HorPointLEst97(x = BigDecimal.ZERO, y = BigDecimal.TEN)
+        var b = p.toHorPoint()
+        assertEquals(BigDecimal.TEN, b.x)
+        assertEquals(BigDecimal.ZERO, b.z)
+
+        p = HorPointLEst97(x = -BigDecimal.ONE, y = BigDecimal.ZERO)
+        b = p.toHorPoint()
+        assertEquals(BigDecimal.ZERO, b.x)
+        assertEquals(BigDecimal.ONE, b.z)
+
+        // Imagine the real-world center of the following block: S 4...5 N, W 8...9 E
+        // In the model, this would be equivalent to: N -5...-4 S, W 8...9 E
+        p = HorPointLEst97(x = "4.5".toBigDecimal(), y = "8.5".toBigDecimal())
+        b = p.toHorPoint()
+        assertEquals("8.5".toBigDecimal(), b.x)
+        assertEquals("-4.5".toBigDecimal(), b.z)
     }
 
 }

@@ -34,4 +34,13 @@ data class BlockPosLEst97(val x: Int, val y: Int, val h: Int) {
 
     }
 
+    data class HorPointLEst97(val x: BigDecimal, val y: BigDecimal) {
+
+        fun toHorPoint() = BlockPos.HorPoint(
+            x = y,
+            z = -x
+        )
+
+    }
+
 }

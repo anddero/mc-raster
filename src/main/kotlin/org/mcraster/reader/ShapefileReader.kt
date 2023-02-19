@@ -1,7 +1,12 @@
 package org.mcraster.reader
 
 import org.geotools.data.DataStoreFinder
+import org.locationtech.jts.geom.LineString
+import org.locationtech.jts.geom.MultiLineString
+import org.mcraster.converters.BlockPosLEst97.HorPointLEst97
+import org.mcraster.converters.Polygon
 import java.io.File
+import java.math.BigDecimal
 
 class ShapefileReader { // Shapefile (.shp) reading capability
     // TODO Check conversion to GeoJson https://sourceforge.net/p/geotools/mailman/message/32744416/
@@ -32,6 +37,43 @@ class ShapefileReader { // Shapefile (.shp) reading capability
             }
             it.close()
         }
+    }
+
+    fun readPolygonsFromLEst97(shpFileLEst97: String): List<Polygon> {
+        val dataStoreLEst97 = DataStoreFinder.getDataStore(mapOf("url" to File(shpFileLEst97).toURI().toString()))
+        val polygons = mutableListOf<Polygon>()
+        dataStoreLEst97.getFeatureSource(dataStoreLEst97.typeNames.single()).features.features().use {
+            while (it.hasNext()) {
+                val geometryValue = it.next().defaultGeometryProperty.value
+                if (geometryValue is MultiLineString) polygons.add(multiLineStringLEst97ToPolygon(geometryValue))
+                else throw RuntimeException("Unexpected object: $geometryValue")
+            }
+        }
+        return polygons
+    }
+
+    companion object {
+
+        private fun multiLineStringLEst97ToPolygon(multiLineStringLEst97: MultiLineString): Polygon {
+            val polygonShapes = (0 until multiLineStringLEst97.numGeometries)
+                .map { multiLineStringLEst97.getGeometryN(it) }
+                .map {
+                    if (it is LineString) it
+                    else throw RuntimeException("Unexpected geometry: $it")
+                }.map { lineStringLEstYxToHorPoints(it) }
+            return Polygon(polygonShapes.first(), polygonShapes.subList(1, polygonShapes.size))
+        }
+
+        private fun lineStringLEstYxToHorPoints(lineStringLEstYx: LineString) =
+            lineStringLEstYx.coordinateSequence.toCoordinateArray()
+                .map { coordinateLEstYx ->
+                    HorPointLEst97(
+                        x = BigDecimal.valueOf(coordinateLEstYx.y),
+                        y = BigDecimal.valueOf(coordinateLEstYx.x)
+                    )
+                }
+                .map { horPointLEst97 -> horPointLEst97.toHorPoint() }
+
     }
 
 }
