@@ -60,34 +60,6 @@ class ShapefileReader { // Shapefile (.shp) reading capability
             return polygons
         }
 
-        /*fun readPointListsFromLEstYx(shpFileLEstYx: String): List<List<HorPoint>> {
-            val multiLineGeometries = readPointListListsFromLEstYx(shpFileLEstYx)
-            return multiLineGeometries.map { it.single() }
-        }*/
-
-        /*private fun readPointListListsFromLEstYx(shpFileLEstYx: String): List<List<List<HorPoint>>> {
-            val dataStoreLEstYx = DataStoreFinder.getDataStore(mapOf("url" to File(shpFileLEstYx).toURI().toString()))
-            val lines = mutableListOf<List<List<HorPoint>>>()
-            dataStoreLEstYx.getFeatureSource(dataStoreLEstYx.typeNames.single()).features.features().use {
-                while (it.hasNext()) {
-                    val geometryValue = it.next().defaultGeometryProperty.value
-                    if (geometryValue is MultiLineString) lines.add(multiLineStringLEstYxToPointList(geometryValue))
-                    else throw RuntimeException("Unexpected object: $geometryValue")
-                }
-            }
-            return lines
-        }*/
-
-        /*private fun multiLineStringLEstYxToPointList(multiLineStringLEstYx: MultiLineString): List<List<HorPoint>> {
-            val polygonShapes = (0 until multiLineStringLEstYx.numGeometries)
-                .map { multiLineStringLEstYx.getGeometryN(it) }
-                .map {
-                    if (it is LineString) it
-                    else throw RuntimeException("Unexpected geometry: $it")
-                }.map { lineStringLEstYxToHorPoints(it) }
-            return polygonShapes
-        }*/
-
         private fun multiPolygonLEstYxToPolygons(multiPolygon: MultiPolygon) =
             (0 until multiPolygon.numGeometries)
                 .map { multiPolygon.getGeometryN(it) }
@@ -118,16 +90,6 @@ class ShapefileReader { // Shapefile (.shp) reading capability
             (0 until polygonLEstYx.numInteriorRing)
                 .map { holeIndex -> polygonLEstYx.getInteriorRingN(holeIndex) }
                 .map { getPolygonLEstYxCorners(linearRingLEstYx = it) }
-
-        /*private fun lineStringLEstYxToHorPoints(lineStringLEstYx: LineString) =
-            lineStringLEstYx.coordinateSequence.toCoordinateArray()
-                .map { coordinateLEstYx ->
-                    HorPointLEst97(
-                        x = BigDecimal.valueOf(coordinateLEstYx.y),
-                        y = BigDecimal.valueOf(coordinateLEstYx.x)
-                    )
-                }
-                .map { horPointLEst97 -> horPointLEst97.toHorPoint() }*/
 
     }
 
