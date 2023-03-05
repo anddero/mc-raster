@@ -4,7 +4,9 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
@@ -12,6 +14,7 @@ import androidx.compose.material.Button
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -23,15 +26,27 @@ import androidx.compose.ui.graphics.withSave
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.singleWindowApplication
+import org.mcraster.BoxType.EmptyPrevEmpty
+import org.mcraster.BoxType.EmptyPrevFull
+import org.mcraster.BoxType.FullPrevEmpty
+import org.mcraster.BoxType.FullPrevFull
+import org.mcraster.Obj3dDisplayProps.Companion.BG_PAINT
+import org.mcraster.Obj3dDisplayProps.Companion.BOX_SIZE
+import org.mcraster.Obj3dDisplayProps.Companion.CANVAS_DIMS
+import org.mcraster.Obj3dDisplayProps.Companion.PADDING
+import org.mcraster.Obj3dDisplayProps.Companion.PADDING_BORDER
+import org.mcraster.Object3dState.Companion.OBJECT_3D_DIMS
 import org.mcraster.reader.ShapefileReader
+import java.io.File
+import java.io.FileOutputStream
 import kotlin.math.roundToInt
 
 fun main() = singleWindowApplication {
     MaterialTheme {
         val (view, setView) = remember { mutableStateOf(View.Main) }
         when (view) {
-            View.Main -> MainView(setView)
-            View.Draw3d -> Draw3dView(setView)
+            View.Main -> viewMain(setView)
+            View.Draw3d -> viewDraw3dObj(setView)
         }
     }
 }
@@ -42,134 +57,212 @@ private enum class View {
 }
 
 @Composable
-private fun MainView(setView: (View) -> Unit) {
+private fun viewMain(setView: (View) -> Unit) {
     Column(Modifier.fillMaxSize(), Arrangement.spacedBy(5.dp)) {
-        Button(modifier = Modifier.align(Alignment.CenterHorizontally),
-            onClick = {
-                generateCustomArea1()
-            }) {
-            Text("Generate Custom Area 1")
-        }
-        Button(modifier = Modifier.align(Alignment.CenterHorizontally),
-            onClick = {
-                printPolygons()
-            }) {
-            Text("Print Polygons")
-        }
-        Button(modifier = Modifier.align(Alignment.CenterHorizontally),
-            onClick = {
-                println("Current Thread: ${Thread.currentThread().name}")
-            }) {
-            Text("Print Current Thread")
-        }
-        Button(modifier = Modifier.align(Alignment.CenterHorizontally),
-            onClick = {
-                setView(View.Draw3d)
-            }) {
-            Text("Draw 3D Object")
-        }
+        buttonCenter("Generate Custom Area 1") { generateCustomArea1() }
+        buttonCenter("Print Polygons") { printPolygons() }
+        buttonCenter("Print Current Thread") { println("Current Thread: ${Thread.currentThread().name}") }
+        buttonCenter("Draw 3D Object") { setView(View.Draw3d) }
     }
 }
 
 @Composable
-private fun Draw3dView(setView: (View) -> Unit) {
+private fun ColumnScope.buttonCenter(text: String, onClick: () -> Unit) =
+    Button(modifier = Modifier.align(Alignment.CenterHorizontally), onClick = onClick) { Text(text) }
+
+@Composable
+private fun RowScope.buttonTop(text: String, onClick: () -> Unit) =
+    Button(modifier = Modifier.align(Alignment.Top), onClick = onClick) { Text(text) }
+
+@Composable
+private fun viewDraw3dObj(setView: (View) -> Unit) {
+    val state = remember { mutableStateOf(Object3dState()) }
     Column(Modifier.fillMaxSize(), Arrangement.Center) {
         Row(Modifier.fillMaxWidth(), Arrangement.spacedBy(5.dp, Alignment.CenterHorizontally)) {
-            Button(modifier = Modifier.align(Alignment.Top),
-                onClick = {
-                    setView(View.Main)
-                }) {
-                Text("Back to Menu")
-            }
-            Button(modifier = Modifier.align(Alignment.Top),
-                onClick = {
-                    // TODO Impl reset
-                }) {
-                Text("Reset")
-            }
-            Button(modifier = Modifier.align(Alignment.Top),
-                onClick = {
-                    // TODO Impl save as
-                }) {
-                Text("Save as...")
-            }
+            buttonTop("Back to Menu") { setView(View.Main) }
+            buttonTop("Reset") { state.value = Object3dState() }
+            buttonTop("Save as 'obj3d.dump'") { state.value.dump("obj3d.dump") }
+            buttonTop("<--") { state.value = state.value.navLeft() }
+            buttonTop("-->") { state.value = state.value.navRight() }
         }
-        Row(modifier = Modifier.fillMaxWidth(), Arrangement.Center) {
-            Canvas3d()
+        Row(Modifier.fillMaxWidth(), Arrangement.Center) {
+            viewDraw3dObjCanvas(state)
         }
     }
 }
 
-private enum class BoxType {
-    Empty,
-    Full
+private fun Color.toPaint(): Paint {
+    val paint = Paint()
+    paint.color = this
+    return paint
 }
 
-@Composable
-private fun Canvas3d() {
-//    val bitmap = remember { mutableStateOf(ImageBitmap(100, 100)) }
-    val pad = 1
-    val padMul = 3
-    val sz = 20
-    val wh = 20
-    val emptyPaint = Paint()
-    emptyPaint.color = Color.White
-    val fillPaint = Paint()
-    fillPaint.color = Color.Red
-    val bgPaint = Paint()
-    bgPaint.color = Color.Black
+private enum class BoxType(val paint: Paint) {
+    EmptyPrevEmpty(Color.White.toPaint()),
+    FullPrevEmpty(Color.Red.copy(green = 0.2f, blue = 0.2f).toPaint()),
+    EmptyPrevFull(Color.Gray.toPaint()),
+    FullPrevFull(Color.Red.toPaint())
+}
 
-    val canvasSzWh = wh * (sz + pad) + pad * (padMul * 2 - 1)
-    val boxes = remember { mutableStateOf(List(wh) { List(wh) { BoxType.Empty } } )}
+private typealias Obj3dRow = List<BoxType>
+private typealias Obj3dLayer = List<Obj3dRow>
+
+private class Object3dState(
+    val index: Int = 0,
+    val layers: List<Obj3dLayer> = listOf(List(OBJECT_3D_DIMS) { List(OBJECT_3D_DIMS) { EmptyPrevEmpty } })
+) {
+
+    fun navLeft() = if (index == 0) this else Object3dState(index - 1, updateLayers())
+
+    fun navRight() = Object3dState(index + 1, updateLayers())
+
+    fun flip(x: Int, y: Int): Object3dState {
+        if (x < 0 || x >= OBJECT_3D_DIMS || y < 0 || y >= OBJECT_3D_DIMS) return this
+        val copy = layers[index].map { it.toMutableList() }
+        when (copy[y][x]) {
+            EmptyPrevEmpty -> copy[y][x] = FullPrevEmpty
+            FullPrevEmpty -> copy[y][x] = EmptyPrevEmpty
+            EmptyPrevFull -> copy[y][x] = FullPrevFull
+            FullPrevFull -> copy[y][x] = EmptyPrevFull
+        }
+        val newLayers = layers.subList(0, index) + listOf(copy) + layers.subList(index + 1, layers.size)
+        return Object3dState(index, newLayers)
+    }
+
+    fun dump(fileName: String) {
+        FileOutputStream(File(fileName), false).bufferedWriter().use { writer ->
+            writer.write("Dimensions: Width $OBJECT_3D_DIMS, Height $OBJECT_3D_DIMS")
+            writer.newLine()
+            for ((i, layer) in layers.withIndex()) {
+                writer.write("Layer $i")
+                writer.newLine()
+                for (row in layer) {
+                    writer.write("    ")
+                    for (box in row) {
+                        when (box) {
+                            EmptyPrevEmpty, EmptyPrevFull -> writer.write("-")
+                            FullPrevEmpty, FullPrevFull -> writer.write("X")
+                        }
+                        writer.write(" ")
+                    }
+                    writer.newLine()
+                }
+            }
+        }
+    }
+
+    private fun updateLayers() = layers.subList(0, index + 1) +
+            (index + 1 until layers.size).map { layers[it].updateLayer(layers[it - 1]) } +
+            if (index + 1 == layers.size) listOf(layers.last().getNextEmptyLayer()) else emptyList()
+
+    companion object {
+
+        const val OBJECT_3D_DIMS = 20
+
+        private fun Obj3dLayer.getNextEmptyLayer() = map { prevRow -> prevRow.map { it.getNextEmptyBox() } }
+
+        private fun BoxType.getNextEmptyBox() = when (this) {
+            EmptyPrevEmpty, EmptyPrevFull -> EmptyPrevEmpty
+            FullPrevEmpty, FullPrevFull -> EmptyPrevFull
+        }
+
+        private fun Obj3dLayer.updateLayer(prev: Obj3dLayer) =
+            prev.zip(this).map { (prevRow, row) -> row.updateRow(prevRow) }
+
+        private fun Obj3dRow.updateRow(prev: Obj3dRow) =
+            prev.zip(this).map { (prevBox, box) -> box.update(prevBox) }
+
+        private fun BoxType.update(prev: BoxType) = when (prev) {
+            EmptyPrevEmpty, EmptyPrevFull -> {
+                when (this) {
+                    EmptyPrevEmpty, EmptyPrevFull -> EmptyPrevEmpty
+                    FullPrevEmpty, FullPrevFull -> FullPrevEmpty
+                }
+            }
+            FullPrevEmpty, FullPrevFull -> {
+                when (this) {
+                    EmptyPrevEmpty, EmptyPrevFull -> EmptyPrevFull
+                    FullPrevEmpty, FullPrevFull -> FullPrevFull
+                }
+            }
+        }
+
+    }
+
+}
+
+private class Obj3dDisplayProps {
+
+    companion object {
+
+        const val PADDING = 1
+        const val PADDING_BORDER = 3
+        const val BOX_SIZE = 20
+        val BG_PAINT = Color.Black.toPaint()
+
+        const val CANVAS_DIMS = OBJECT_3D_DIMS * (BOX_SIZE + PADDING) + PADDING_BORDER * 2 - 1
+
+    }
+
+}
+
+//@OptIn(ExperimentalComposeUiApi::class)
+@Composable
+private fun viewDraw3dObjCanvas(state: MutableState<Object3dState>) {
     Canvas(
         modifier = Modifier
-            .size(canvasSzWh.dp)
+            .size(CANVAS_DIMS.dp)
             .pointerInput(Unit) {
                 detectTapGestures { offset ->
                     println("tap $offset")
-                    val normx = offset.x.roundToInt() - pad * padMul
-                    val normy = offset.y.roundToInt() - pad * padMul
-                    val rx = normx % (sz + pad)
-                    val ry = normy % (sz + pad)
-                    val cx = normx / (sz + pad)
-                    val cy = normy / (sz + pad)
-                    if (rx < sz && ry < sz) {
-                        val copy = boxes.value.map { it.toMutableList() }.toMutableList()
-                        when (copy[cy][cx]) {
-                            BoxType.Empty -> copy[cy][cx] = BoxType.Full
-                            BoxType.Full -> copy[cy][cx] = BoxType.Empty
-                        }
-                        boxes.value = copy
-                    }
+                    state.value = state.value.flip(x = offset.x.toBoxIndex(), y = offset.y.toBoxIndex())
                 }
             }
+/*            .onKeyEvent { keyEvent ->
+                println("keyEvent $keyEvent")
+                when (keyEvent.type) {
+                    KeyEventType.KeyDown -> {
+                        when (keyEvent.key) {
+                            Key.DirectionRight -> {
+                                state.value = state.value.navRight()
+                                true
+                            }
+                            Key.DirectionLeft -> {
+                                state.value = state.value.navLeft()
+                                true
+                            }
+                            else -> false
+                        }
+                    }
+                    else -> false
+                }
+            }*/
     ) {
         drawIntoCanvas { canvas ->
             canvas.withSave {
                 println("Drawing")
-                canvas.drawRect(0f, 0f, canvasSzWh.toFloat(), canvasSzWh.toFloat(), bgPaint)
-                for ((y, row) in boxes.value.withIndex()) {
+                canvas.drawRect(0f, 0f, CANVAS_DIMS.toFloat(), CANVAS_DIMS.toFloat(), BG_PAINT)
+                for ((y, row) in state.value.layers[state.value.index].withIndex()) {
                     for ((x, box) in row.withIndex()) {
-                        val xCoord = x * (sz + pad) + pad * padMul
-                        val yCoord = y * (sz + pad) + pad * padMul
-                        val xxCoord = xCoord + sz
-                        val yyCoord = yCoord + sz
+                        val left = x * (BOX_SIZE + PADDING) + PADDING_BORDER
+                        val top = y * (BOX_SIZE + PADDING) + PADDING_BORDER
                         canvas.drawRect(
-                            xCoord.toFloat(),
-                            yCoord.toFloat(),
-                            xxCoord.toFloat(),
-                            yyCoord.toFloat(),
-                            when (box) {
-                                BoxType.Empty -> emptyPaint; BoxType.Full -> fillPaint
-                            }
+                            left = left.toFloat(),
+                            top = top.toFloat(),
+                            right = (left + BOX_SIZE).toFloat(),
+                            bottom = (top + BOX_SIZE).toFloat(),
+                            paint = box.paint
                         )
                     }
                 }
-//                canvas.drawRect(0f, 0f, 10f, 10f, Paint())
-//                canvas.drawImage(bitmap.value, Offset.Zero, Paint())
             }
         }
     }
+}
+
+private fun Float.toBoxIndex(): Int {
+    val mouseCoordNorm = roundToInt() - PADDING_BORDER
+    return if (mouseCoordNorm % (BOX_SIZE + PADDING) < BOX_SIZE) mouseCoordNorm / (BOX_SIZE + PADDING) else -1
 }
 
 fun generateCustomArea1() {
