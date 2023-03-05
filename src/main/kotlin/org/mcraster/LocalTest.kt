@@ -7,6 +7,7 @@ import org.mcraster.model.BlockType
 import org.mcraster.model.DiskBoundModel
 import org.mcraster.reader.DataSourceDescriptor
 import org.mcraster.reader.DataSourceDescriptor.DataFormat.LINES_LEST97_YXH_DOUBLE
+import org.mcraster.reader.DataSourceDescriptor.DataFormat.OBJ_3D
 import org.mcraster.reader.DataSourceDescriptor.DataSourceType.RELATIVE_FILE
 import org.mcraster.reader.DataSourceDescriptor.PointConversionStrategy.BOUNDING_HORIZONTALLY_BUT_VERTICALLY_ROUNDED_TOWARDS_TOP_OF_BLOCK
 import org.mcraster.util.MinecraftConstants.MC_SEA_BLOCK_LEVEL
@@ -31,6 +32,7 @@ object LocalTest {
             seaLevelBlockBottomY = seaLevelBlockBottomY,
             softValidateBlockLimits = true
         ).asDataSource()
+
         val heightMapDataSource = DataSourceDescriptor(
             path = "$inputFilesDir/debug-heightmap.txt",
             type = RELATIVE_FILE,
@@ -38,8 +40,20 @@ object LocalTest {
             pointConversionStrategy = BOUNDING_HORIZONTALLY_BUT_VERTICALLY_ROUNDED_TOWARDS_TOP_OF_BLOCK,
             seaLevelBlockBottomY = seaLevelBlockBottomY,
             softValidateBlockLimits = true,
-//            blockFilter = loadHeightMapFilter("$inputFilesDir/minMaxFilter.xyz")
+            blockTransform = { blocks -> blocks.filter(loadHeightMapFilter("$inputFilesDir/minMaxFilter.xyz")) }
         ).asDataSource()
+
+        val spawnPos = spawnPosDataSource.first()
+        val stoneObj3dDataSource = DataSourceDescriptor(
+            path = "$inputFilesDir/obj3d.dump",
+            type = RELATIVE_FILE,
+            format = OBJ_3D,
+            softValidateBlockLimits = true,
+            blockTransform = { blocks ->
+                blocks.map { block -> block.plus(dx = spawnPos.x + 15, dy = spawnPos.y + 15, dz = spawnPos.z + 15) }
+            }
+        ).asDataSource()
+
         val markerPolesDataSource = DataSourceDescriptor(
             path = "$inputFilesDir/poles.xyz",
             type = RELATIVE_FILE,
@@ -48,6 +62,7 @@ object LocalTest {
             seaLevelBlockBottomY = seaLevelBlockBottomY,
             softValidateBlockLimits = true
         ).asDataSource().filter { false }
+
         val waterPoolDataSource = DataSourceDescriptor(
             path = "$inputFilesDir/pools.xyz",
             type = RELATIVE_FILE,
@@ -66,16 +81,17 @@ object LocalTest {
                 WorldConfig.Layer(BlockType.SOIL, 5, 7),
                 WorldConfig.Layer(BlockType.WATER, 8, seaLevelBlockBottomY)
             ),
-            spawnPos = spawnPosDataSource.first(),
+            spawnPos = spawnPos,
             isGeneratingStructuresEnabled = false,
             gameType = WorldConfig.GameType.CREATIVE
         )
 
         val model = DiskBoundModel(File("$outputModelsDir/$modelAndWorldName"), true)
-        model.maxCacheSizeMB = 5120
+        model.maxCacheSizeMB = 1024
         val diskBoundModel = DiskBoundModelBuilder.build(
             model = model,
             heightMap = heightMapDataSource,
+            stoneObj3d = stoneObj3dDataSource,
             markerPoleCoordinates = markerPolesDataSource,
             waterPoolCentroids = waterPoolDataSource
         )

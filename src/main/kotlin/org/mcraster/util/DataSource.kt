@@ -4,6 +4,8 @@ sealed interface DataSource<T> {
 
     fun <R> use(block: (Sequence<T>) -> R): R
 
+    fun forEach(action: (T) -> Unit) = use { it.forEach(action) }
+
     fun <U> transform(transformer: (Sequence<T>) -> Sequence<U>): DataSource<U> =
         TransformedDataSource(this, transformer)
 

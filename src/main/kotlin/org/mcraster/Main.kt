@@ -30,15 +30,14 @@ import org.mcraster.BoxType.EmptyPrevEmpty
 import org.mcraster.BoxType.EmptyPrevFull
 import org.mcraster.BoxType.FullPrevEmpty
 import org.mcraster.BoxType.FullPrevFull
-import org.mcraster.Obj3dDisplayProps.Companion.BG_PAINT
-import org.mcraster.Obj3dDisplayProps.Companion.BOX_SIZE
-import org.mcraster.Obj3dDisplayProps.Companion.CANVAS_DIMS
-import org.mcraster.Obj3dDisplayProps.Companion.PADDING
-import org.mcraster.Obj3dDisplayProps.Companion.PADDING_BORDER
+import org.mcraster.Obj3dDisplayProps.BG_PAINT
+import org.mcraster.Obj3dDisplayProps.BOX_SIZE
+import org.mcraster.Obj3dDisplayProps.CANVAS_DIMS
+import org.mcraster.Obj3dDisplayProps.PADDING
+import org.mcraster.Obj3dDisplayProps.PADDING_BORDER
 import org.mcraster.Object3dState.Companion.OBJECT_3D_DIMS
 import org.mcraster.reader.ShapefileReader
 import java.io.File
-import java.io.FileOutputStream
 import kotlin.math.roundToInt
 
 fun main() = singleWindowApplication {
@@ -60,7 +59,7 @@ private enum class View {
 private fun viewMain(setView: (View) -> Unit) {
     Column(Modifier.fillMaxSize(), Arrangement.spacedBy(5.dp)) {
         buttonCenter("Generate Custom Area 1") { generateCustomArea1() }
-        buttonCenter("Print Polygons") { printPolygons() }
+        buttonCenter("Print Polygons") { /*printPolygons()*/ }
         buttonCenter("Print Current Thread") { println("Current Thread: ${Thread.currentThread().name}") }
         buttonCenter("Draw 3D Object") { setView(View.Draw3d) }
     }
@@ -130,7 +129,7 @@ private class Object3dState(
     }
 
     fun dump(fileName: String) {
-        FileOutputStream(File(fileName), false).bufferedWriter().use { writer ->
+        File(fileName).outputStream().bufferedWriter().use { writer ->
             writer.write("Dimensions: Width $OBJECT_3D_DIMS, Height $OBJECT_3D_DIMS")
             writer.newLine()
             for ((i, layer) in layers.withIndex()) {
@@ -157,7 +156,7 @@ private class Object3dState(
 
     companion object {
 
-        const val OBJECT_3D_DIMS = 20
+        const val OBJECT_3D_DIMS = 40
 
         private fun Obj3dLayer.getNextEmptyLayer() = map { prevRow -> prevRow.map { it.getNextEmptyBox() } }
 
@@ -191,22 +190,17 @@ private class Object3dState(
 
 }
 
-private class Obj3dDisplayProps {
+private object Obj3dDisplayProps {
 
-    companion object {
+    const val PADDING = 1
+    const val PADDING_BORDER = 3
+    const val BOX_SIZE = 20
+    val BG_PAINT = Color.Black.toPaint()
 
-        const val PADDING = 1
-        const val PADDING_BORDER = 3
-        const val BOX_SIZE = 20
-        val BG_PAINT = Color.Black.toPaint()
-
-        const val CANVAS_DIMS = OBJECT_3D_DIMS * (BOX_SIZE + PADDING) + PADDING_BORDER * 2 - 1
-
-    }
+    const val CANVAS_DIMS = OBJECT_3D_DIMS * (BOX_SIZE + PADDING) + PADDING_BORDER * 2 - 1
 
 }
 
-//@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 private fun viewDraw3dObjCanvas(state: MutableState<Object3dState>) {
     Canvas(
@@ -218,25 +212,6 @@ private fun viewDraw3dObjCanvas(state: MutableState<Object3dState>) {
                     state.value = state.value.flip(x = offset.x.toBoxIndex(), y = offset.y.toBoxIndex())
                 }
             }
-/*            .onKeyEvent { keyEvent ->
-                println("keyEvent $keyEvent")
-                when (keyEvent.type) {
-                    KeyEventType.KeyDown -> {
-                        when (keyEvent.key) {
-                            Key.DirectionRight -> {
-                                state.value = state.value.navRight()
-                                true
-                            }
-                            Key.DirectionLeft -> {
-                                state.value = state.value.navLeft()
-                                true
-                            }
-                            else -> false
-                        }
-                    }
-                    else -> false
-                }
-            }*/
     ) {
         drawIntoCanvas { canvas ->
             canvas.withSave {

@@ -28,6 +28,8 @@ data class BlockPos(val x: Int, val y: Int, val z: Int) {
     val localBlockX get() = getLocalBlockIndex(globalBlockIndex = x)
     val localBlockZ get() = getLocalBlockIndex(globalBlockIndex = z)
 
+    fun plus(dx: Int, dy: Int, dz: Int) = BlockPos(x = x + dx, y = y + dy, z = z + dz)
+
     companion object {
 
         fun getGlobalBlockIndex(regionIndex: Int, localChunkIndex: Int, localBlockIndex: Int) =
