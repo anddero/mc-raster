@@ -26,12 +26,14 @@ object DiskBoundModelBuilder {
     fun build(
         model: DiskBoundModel,
         heightMap: DataSource<BlockPos>,
+        waterBodies: DataSource<BlockPos>,
         stoneObj3d: DataSource<BlockPos>,
         markerPoleCoordinates: DataSource<BlockPos>,
         waterPoolCentroids: DataSource<BlockPos>,
         islandCentroids: DataSource<BlockPos> = DataSource.emptyDataSource()
     ): DiskBoundModel {
         model.buildTerrain(heightMap = heightMap)
+        model.buildWaterBodies(waterBodies = waterBodies)
         model.buildObj3d(blocks = stoneObj3d, blockType = BlockType.STONE)
         model.buildMarkerPoles(markerPoles = markerPoleCoordinates)
         model.buildWaterPools(waterPools = waterPoolCentroids)
@@ -45,6 +47,13 @@ object DiskBoundModelBuilder {
         this.setBlock(BlockPos(x = highestBlock.x, y = 0, z = highestBlock.z), BlockType.UNBREAKABLE_STONE)
         for (y in 1 .. highestBlock.y) {
             this.setBlock(BlockPos(x = highestBlock.x, y = y, z = highestBlock.z), BlockType.SOIL)
+        }
+    }
+
+    private fun DiskBoundModel.buildWaterBodies(waterBodies: DataSource<BlockPos>) = waterBodies.forEach { highestBlock ->
+        this.setBlock(BlockPos(x = highestBlock.x, y = 0, z = highestBlock.z), BlockType.UNBREAKABLE_STONE)
+        for (y in 1 .. highestBlock.y) {
+            this.setBlock(BlockPos(x = highestBlock.x, y = y, z = highestBlock.z), BlockType.WATER)
         }
     }
 

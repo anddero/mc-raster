@@ -59,7 +59,7 @@ private enum class View {
 private fun viewMain(setView: (View) -> Unit) {
     Column(Modifier.fillMaxSize(), Arrangement.spacedBy(5.dp)) {
         buttonCenter("Generate Custom Area 1") { generateCustomArea1() }
-        buttonCenter("Print Polygons") { /*printPolygons()*/ }
+        buttonCenter("Print Polygons") { printPolygons() }
         buttonCenter("Print Current Thread") { println("Current Thread: ${Thread.currentThread().name}") }
         buttonCenter("Draw 3D Object") { setView(View.Draw3d) }
     }

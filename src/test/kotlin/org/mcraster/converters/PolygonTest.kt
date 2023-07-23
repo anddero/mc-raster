@@ -1,7 +1,10 @@
 package org.mcraster.converters
 
+import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.assertThrows
 import org.mcraster.model.BlockPos
+import org.mcraster.model.BlockPos.HorPos
+import org.mcraster.model.BlockPos.HorPosRect
 import java.math.BigDecimal
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -158,7 +161,7 @@ class PolygonTest {
     @Test
     fun cropPolygonIntoNothing() {
         val rect = listOf(p(0.0, 0.0), p(0.0, 1.0), p(1.0, 1.0), p(1.0, 0.0))
-        val cropRect = BlockPos.HorRect(p(5.0, 5.0), p(6.0, 6.0))
+        val cropRect = BlockPos.HorPointRect(p(5.0, 5.0), p(6.0, 6.0))
 
         val polygon = Polygon(outerShellPolygonCorners = rect, polygonCornersOfHoles = emptyList())
         val croppedList = polygon.crop(cropRect)
@@ -169,8 +172,8 @@ class PolygonTest {
     @Test
     fun cropRectangleInHalfByExactBounds() {
         val rect = listOf(p(0.0, 0.0), p(0.0, 1.0), p(1.0, 1.0), p(1.0, 0.0))
-        val cropRectLeft = BlockPos.HorRect(p(0.0, 0.0), p(0.5, 1.0))
-        val cropRectRight = BlockPos.HorRect(p(0.5, 0.0), p(1.0, 1.0))
+        val cropRectLeft = BlockPos.HorPointRect(p(0.0, 0.0), p(0.5, 1.0))
+        val cropRectRight = BlockPos.HorPointRect(p(0.5, 0.0), p(1.0, 1.0))
         val expectedLeft = listOf(p(0.0, 0.0), p(0.0, 1.0), p(0.5, 1.0), p(0.5, 0.0))
         val expectedRight = listOf(p(0.5, 0.0), p(0.5, 1.0), p(1.0, 1.0), p(1.0, 0.0))
 
@@ -193,7 +196,7 @@ class PolygonTest {
     fun cropPolygonIntoSeveralPieces() {
         val lake =
             listOf(p(-1.0, -1.0), p(-1.5, 0.0), p(-0.5, 1.0), p(0.3, 0.5), p(0.2, -0.5), p(1.0, 2.0), p(1.5, -1.0))
-        val cropRect = BlockPos.HorRect(p(0.0, 0.0), p(1.0, 1.0))
+        val cropRect = BlockPos.HorPointRect(p(0.0, 0.0), p(1.0, 1.0))
         val expectedOne = listOf(p(0.0, 0.0), p(0.0, 0.6875), p(0.3, 0.5), p(0.25, 0.0))
         val expectedTwo = listOf(p(0.36, 0.0), p(0.68, 1.0), p(1.0, 1.0), p(1.0, 0.0))
 
@@ -203,7 +206,6 @@ class PolygonTest {
         assertEquals(2, croppedList.size)
         croppedList.forEach { assertTrue { it.getHoles().isEmpty() } }
         val shells = croppedList.map { it.getOuterShell() }
-        println("shells $shells")
         val err = BigDecimal.valueOf(0.0000001)
         assertTrue {
             (areSameRings(expectedOne, shells[0], err) && areSameRings(expectedTwo, shells[1], err)) ||
@@ -211,7 +213,231 @@ class PolygonTest {
         }
     }
 
+    @Test
+    fun rasterizeSinglePixelSquare() {
+        /**
+         *   (0, 0) ------- (1, 0)
+         *      |              |
+         *      |              |
+         *      |              |
+         *   (0, 1) ------- (1, 1)
+         */
+        val shell = listOf(p(0.0, 0.0), p(1.0, 0.0), p(1.0, 1.0), p(0.0, 1.0))
+        val polygon = Polygon(outerShellPolygonCorners = shell, polygonCornersOfHoles = emptyList())
+        val rasterized = polygon.rasterize(HorPosRect(HorPos(-1, -1), HorPos(3, 3)), false)
+        /**
+         *    -1 0 1 2
+         * -1  . . . .
+         *  0  . X X .
+         *  1  . X X .
+         *  2  . . . .
+         */
+        assertArrayEquals(
+            arrayOf(
+                booleanArrayOf(false, false, false, false),
+                booleanArrayOf(false, true, false, false),
+                booleanArrayOf(false, false, false, false),
+                booleanArrayOf(false, false, false, false)
+            ),
+            rasterized.maskZx
+        )
+    }
+
+    @Test
+    fun rasterizeTooSmallSquare() {
+        val shell = listOf(p(0.0, 0.0), p(0.5, 0.0), p(0.5, 0.5), p(0.0, 0.5))
+        val polygon = Polygon(outerShellPolygonCorners = shell, polygonCornersOfHoles = emptyList())
+        val rasterized = polygon.rasterize(HorPosRect(HorPos(-1, -1), HorPos(3, 3)), false)
+        assertArrayEquals(
+            arrayOf(
+                booleanArrayOf(false, false, false, false),
+                booleanArrayOf(false, false, false, false),
+                booleanArrayOf(false, false, false, false),
+                booleanArrayOf(false, false, false, false)
+            ),
+            rasterized.maskZx
+        )
+    }
+
+    @Test
+    fun rasterize2x2Square() {
+        val shell = listOf(p(0.99, 0.99), p(2.01, 0.99), p(2.01, 2.01), p(0.99, 2.01))
+        val polygon = Polygon(outerShellPolygonCorners = shell, polygonCornersOfHoles = emptyList())
+        val rasterized = polygon.rasterize(HorPosRect(HorPos(-1, -1), HorPos(4, 4)), false)
+        assertArrayEquals(
+            arrayOf(
+                booleanArrayOf(false, false, false, false, false),
+                booleanArrayOf(false, true, true, false, false),
+                booleanArrayOf(false, true, true, false, false),
+                booleanArrayOf(false, false, false, false, false),
+                booleanArrayOf(false, false, false, false, false)
+            ),
+            rasterized.maskZx
+        )
+    }
+
+    @Test
+    fun rasterizeIntTriangles() {
+        assertIntTriangleRasterization(
+            p(2, 4), p(9, 3), p(9, 9),
+            0, 2, 10, 10,
+            arrayOf(
+                L(0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+                L(0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+                L(0, 0, 1, 1, 1, 1, 1, 1, 1, 0),
+                L(0, 0, 0, 0, 1, 1, 1, 1, 1, 0),
+                L(0, 0, 0, 0, 0, 1, 1, 1, 1, 0),
+                L(0, 0, 0, 0, 0, 0, 0, 1, 1, 0),
+                L(0, 0, 0, 0, 0, 0, 0, 0, 1, 0),
+                L(0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+            )
+        )
+        assertIntTriangleRasterization(
+            p(2, 4), p(7, 12), p(9, 9),
+            0, 0, 10, 13,
+            arrayOf(
+                L(0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+                L(0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+                L(0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+                L(0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+                L(0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+                L(0, 0, 0, 1, 0, 0, 0, 0, 0, 0),
+                L(0, 0, 0, 0, 1, 0, 0, 0, 0, 0),
+                L(0, 0, 0, 0, 1, 1, 1, 0, 0, 0),
+                L(0, 0, 0, 0, 0, 1, 1, 1, 0, 0),
+                L(0, 0, 0, 0, 0, 0, 1, 1, 1, 0),
+                L(0, 0, 0, 0, 0, 0, 1, 1, 1, 0),
+                L(0, 0, 0, 0, 0, 0, 0, 1, 0, 0),
+                L(0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+            )
+        )
+        assertIntTriangleRasterization(
+            p(0, 0), p(1, 0), p(1, 1),
+            -1, -1, 2, 2,
+            arrayOf(
+                L(0, 0, 0),
+                L(0, 1, 0),
+                L(0, 0, 0)
+            )
+        )
+    }
+
+    @Test
+    fun rasterizeIntQuadrilaterals() {
+        assertIntQuadrilateralRasterization(
+            p(2, 5), p(14, 13), p(12, 7), p(21, 4),
+            1, 3, 22, 14,
+            arrayOf(
+                L(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0),
+                L(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0),
+                L(0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0),
+                L(0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0),
+                L(0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0),
+                L(0,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0),
+                L(0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0),
+                L(0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0),
+                L(0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0),
+                L(0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0),
+                L(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0)
+            )
+        )
+        assertIntQuadrilateralRasterization(
+            p(20, 12), p(14, 13), p(12, 7), p(21, 4),
+            1, 3, 22, 14,
+            arrayOf(
+                L(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0),
+                L(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0),
+                L(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0),
+                L(0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,0),
+                L(0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,0),
+                L(0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,0),
+                L(0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,0),
+                L(0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,0),
+                L(0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,0),
+                L(0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,0,0),
+                L(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0)
+            )
+        )
+    }
+
+    @Test
+    fun rasterizeTriangleWithHole() {
+        val shell = listOf(p(15, 10), p(3,13), p(6,2))
+        val hole = listOf(p(10, 9), p(6, 10), p(8, 6))
+        val polygon = Polygon(outerShellPolygonCorners = shell, polygonCornersOfHoles = listOf(hole))
+        val rasterized = polygon.rasterize(canvas = HorPosRect(min = HorPos(x = 2, z = 1), max = HorPos(16, 14)), cropFirst = false)
+        assertArrayEquals(
+            arrayOf(
+                L(0,0,0,0,0,0,0,0,0,0,0,0,0,0),
+                L(0,0,0,0,0,0,0,0,0,0,0,0,0,0),
+                L(0,0,0,0,1,1,0,0,0,0,0,0,0,0),
+                L(0,0,0,0,1,1,1,0,0,0,0,0,0,0),
+                L(0,0,0,0,1,1,1,1,0,0,0,0,0,0),
+                L(0,0,0,1,1,1,1,1,1,0,0,0,0,0),
+                L(0,0,0,1,1,1,0,1,1,1,0,0,0,0),
+                L(0,0,0,1,1,0,0,0,1,1,1,0,0,0),
+                L(0,0,0,1,1,0,0,0,1,1,1,1,0,0),
+                L(0,0,1,1,1,1,1,1,1,1,1,1,1,0),
+                L(0,0,1,1,1,1,1,1,1,0,0,0,0,0),
+                L(0,0,1,1,1,0,0,0,0,0,0,0,0,0),
+                L(0,0,0,0,0,0,0,0,0,0,0,0,0,0)
+            ),
+            rasterized.maskZx
+        )
+    }
+
+    @Test
+    fun rasterizeOutOfBoundsTriangle() {
+        val shell = listOf(p(15, 10), p(3,13), p(6,2))
+        val polygon = Polygon(outerShellPolygonCorners = shell, polygonCornersOfHoles = emptyList())
+        val rasterized = polygon.rasterize(canvas = HorPosRect(min = HorPos(x = 2, z = 5), max = HorPos(12, 14)), cropFirst = false)
+        assertArrayEquals(
+            arrayOf(
+                L(0,0,0,0,1,1,1,1,0,0),
+                L(0,0,0,1,1,1,1,1,1,0),
+                L(0,0,0,1,1,1,1,1,1,1),
+                L(0,0,0,1,1,1,1,1,1,1),
+                L(0,0,0,1,1,1,1,1,1,1),
+                L(0,0,1,1,1,1,1,1,1,1),
+                L(0,0,1,1,1,1,1,1,1,0),
+                L(0,0,1,1,1,0,0,0,0,0),
+                L(0,0,0,0,0,0,0,0,0,0)
+            ),
+            rasterized.maskZx
+        )
+    }
+
+    private fun assertIntTriangleRasterization(p1: BlockPos.HorPoint, p2: BlockPos.HorPoint, p3: BlockPos.HorPoint,
+                                               minX: Int, minZ: Int, maxX: Int, maxZ: Int, expected: Array<BooleanArray>) {
+        val shell = listOf(p1, p2, p3)
+        val polygon = Polygon(outerShellPolygonCorners = shell, polygonCornersOfHoles = emptyList())
+        val min = HorPos(x = minX, z = minZ)
+        val rasterized = polygon.rasterize(canvas = HorPosRect(min = min, max = HorPos(maxX, maxZ)), cropFirst = false)
+        assertEquals(min, rasterized.origin)
+        assertArrayEquals(expected, rasterized.maskZx)
+    }
+
+    private fun assertIntQuadrilateralRasterization(p1: BlockPos.HorPoint, p2: BlockPos.HorPoint, p3: BlockPos.HorPoint, p4: BlockPos.HorPoint,
+                                                    minX: Int, minZ: Int, maxX: Int, maxZ: Int, expected: Array<BooleanArray>) {
+        val shell = listOf(p1, p2, p3, p4)
+        val polygon = Polygon(outerShellPolygonCorners = shell, polygonCornersOfHoles = emptyList())
+        val min = HorPos(x = minX, z = minZ)
+        val rasterized = polygon.rasterize(canvas = HorPosRect(min = min, max = HorPos(maxX, maxZ)), cropFirst = false)
+        assertEquals(min, rasterized.origin)
+        assertArrayEquals(expected, rasterized.maskZx)
+    }
+
     private fun p(x: Double, z: Double) = BlockPos.HorPoint(x = BigDecimal.valueOf(x), z = BigDecimal.valueOf(z))
+
+    private fun p(x: Int, z: Int) = BlockPos.HorPoint(x = BigDecimal.valueOf(x.toDouble()), z = BigDecimal.valueOf(z.toDouble()))
+
+    private fun L(vararg x: Int) = x.map {
+        when (it) {
+            0 -> false
+            1 -> true
+            else -> throw RuntimeException("Only 0 or 1 values accepted")
+        }
+    }.toBooleanArray()
 
     private fun areSameRings(a: List<BlockPos.HorPoint>, b: List<BlockPos.HorPoint>, tolerance: BigDecimal): Boolean {
         if (a.size < 3 || b.size < 3) throw RuntimeException("Not valid rings")
@@ -225,7 +451,7 @@ class PolygonTest {
         return a.subList(aOffset, a.size) + a.subList(0, aOffset)
     }
 
-    private fun equals(a: BigDecimal, b: BigDecimal, tolerance: BigDecimal) = a.minus(b).abs() < tolerance
+    private fun equals(a: BigDecimal, b: BigDecimal, tolerance: BigDecimal) = a.minus(b).abs() <= tolerance
 
     private fun equals(a: BlockPos.HorPoint, b: BlockPos.HorPoint, tolerance: BigDecimal) =
         equals(a.x, b.x, tolerance) && equals(a.z, b.z, tolerance)

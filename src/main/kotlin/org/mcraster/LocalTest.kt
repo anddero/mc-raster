@@ -3,13 +3,16 @@ package org.mcraster
 import org.mcraster.builder.DiskBoundModelBuilder
 import org.mcraster.generator.J2BlocksWorldGenerator
 import org.mcraster.model.BlockPos
+import org.mcraster.model.BlockPos.Cube
 import org.mcraster.model.BlockType
 import org.mcraster.model.DiskBoundModel
 import org.mcraster.reader.DataSourceDescriptor
 import org.mcraster.reader.DataSourceDescriptor.DataFormat.LINES_LEST97_YXH_DOUBLE
 import org.mcraster.reader.DataSourceDescriptor.DataFormat.OBJ_3D
+import org.mcraster.reader.DataSourceDescriptor.DataFormat.POLYGON_SHP_LEST97_YX
 import org.mcraster.reader.DataSourceDescriptor.DataSourceType.RELATIVE_FILE
 import org.mcraster.reader.DataSourceDescriptor.PointConversionStrategy.BOUNDING_HORIZONTALLY_BUT_VERTICALLY_ROUNDED_TOWARDS_TOP_OF_BLOCK
+import org.mcraster.reader.DataSourceDescriptor.PointConversionStrategy.VERTICALLY_FIXED_AT_SEA_LEVEL
 import org.mcraster.util.MinecraftConstants.MC_SEA_BLOCK_LEVEL
 import org.mcraster.world.WorldConfig
 import java.io.File
@@ -24,14 +27,31 @@ object LocalTest {
         val outputModelsDir = "output-models"
         val modelAndWorldName = "CustomArea1-Debug"
 
-        val spawnPosDataSource = DataSourceDescriptor(
+        val spawnPos = DataSourceDescriptor(
             path = "$inputFilesDir/debug-spawn.txt",
             type = RELATIVE_FILE,
             format = LINES_LEST97_YXH_DOUBLE,
             pointConversionStrategy = BOUNDING_HORIZONTALLY_BUT_VERTICALLY_ROUNDED_TOWARDS_TOP_OF_BLOCK,
             seaLevelBlockBottomY = seaLevelBlockBottomY,
             softValidateBlockLimits = true
-        ).asDataSource()
+        ).asDataSource().first()
+
+        val worldLimits = DataSourceDescriptor(
+            path = "$inputFilesDir/minMaxFilter.xyz",
+            type = RELATIVE_FILE,
+            format = LINES_LEST97_YXH_DOUBLE,
+            pointConversionStrategy = BOUNDING_HORIZONTALLY_BUT_VERTICALLY_ROUNDED_TOWARDS_TOP_OF_BLOCK,
+            seaLevelBlockBottomY = MC_SEA_BLOCK_LEVEL,
+            softValidateBlockLimits = false
+        ).asDataSource().firstTwo().let { (limit1, limit2) ->
+            val xMin = min(limit1.x, limit2.x)
+            val yMin = min(limit1.y, limit2.y)
+            val zMin = min(limit1.z, limit2.z)
+            val xMax = max(limit1.x, limit2.x)
+            val yMax = max(limit1.y, limit2.y)
+            val zMax = max(limit1.z, limit2.z)
+            Cube(min = BlockPos(x = xMin, y = yMin, z = zMin), max = BlockPos(x = xMax, y = yMax, z = zMax))
+        }
 
         val heightMapDataSource = DataSourceDescriptor(
             path = "$inputFilesDir/debug-heightmap.txt",
@@ -40,10 +60,19 @@ object LocalTest {
             pointConversionStrategy = BOUNDING_HORIZONTALLY_BUT_VERTICALLY_ROUNDED_TOWARDS_TOP_OF_BLOCK,
             seaLevelBlockBottomY = seaLevelBlockBottomY,
             softValidateBlockLimits = true,
-            blockTransform = { blocks -> blocks.filter(loadHeightMapFilter("$inputFilesDir/minMaxFilter.xyz")) }
+            worldLimits = worldLimits
         ).asDataSource()
 
-        val spawnPos = spawnPosDataSource.first()
+        val waterBodyDataSource = DataSourceDescriptor(
+            path = "$inputFilesDir/waterbody.shp",
+            type = RELATIVE_FILE,
+            format = POLYGON_SHP_LEST97_YX,
+            pointConversionStrategy = VERTICALLY_FIXED_AT_SEA_LEVEL,
+            seaLevelBlockBottomY = seaLevelBlockBottomY,
+            softValidateBlockLimits = true,
+            worldLimits = worldLimits
+        ).asDataSource()
+
         val stoneObj3dDataSource = DataSourceDescriptor(
             path = "$inputFilesDir/obj3d.dump",
             type = RELATIVE_FILE,
@@ -91,33 +120,13 @@ object LocalTest {
         val diskBoundModel = DiskBoundModelBuilder.build(
             model = model,
             heightMap = heightMapDataSource,
+            waterBodies = waterBodyDataSource,
             stoneObj3d = stoneObj3dDataSource,
             markerPoleCoordinates = markerPolesDataSource,
             waterPoolCentroids = waterPoolDataSource
         )
         diskBoundModel.maxCacheSizeMB = 256
         J2BlocksWorldGenerator.generateToDisk(worldConfig, diskBoundModel)
-    }
-
-    private fun loadHeightMapFilter(filterFilePath: String): (BlockPos) -> Boolean {
-        val (limit1, limit2) = DataSourceDescriptor(
-            path = filterFilePath,
-            type = RELATIVE_FILE,
-            format = LINES_LEST97_YXH_DOUBLE,
-            pointConversionStrategy = BOUNDING_HORIZONTALLY_BUT_VERTICALLY_ROUNDED_TOWARDS_TOP_OF_BLOCK,
-            seaLevelBlockBottomY = MC_SEA_BLOCK_LEVEL,
-            softValidateBlockLimits = false
-        ).asDataSource().firstTwo()
-        val xMin = min(limit1.x, limit2.x)
-        val yMin = min(limit1.y, limit2.y)
-        val zMin = min(limit1.z, limit2.z)
-        val xMax = max(limit1.x, limit2.x)
-        val yMax = max(limit1.y, limit2.y)
-        val zMax = max(limit1.z, limit2.z)
-        val blockPosFilter: (BlockPos) -> Boolean = {
-            it.x in xMin..xMax && it.y in yMin..yMax && it.z in zMin..zMax
-        }
-        return blockPosFilter
     }
 
 }

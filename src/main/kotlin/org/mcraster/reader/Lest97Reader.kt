@@ -21,6 +21,8 @@ object Lest97Reader {
             PointConversionStrategy.BOUNDING_BLOCK -> pointsLEst97.map { it.getBoundingBlock() }
             PointConversionStrategy.BOUNDING_HORIZONTALLY_BUT_VERTICALLY_ROUNDED_TOWARDS_TOP_OF_BLOCK ->
                 pointsLEst97.map { it.getBoundingHorizontallyButVerticallyRoundedTowardsTopOfBlock() }
+            PointConversionStrategy.VERTICALLY_FIXED_AT_SEA_LEVEL ->
+                throw RuntimeException("Strategy not supported for this operation")
         }
         return blockPositionsLEst97
             .map { it.toBlockPos(seaLevelBlockBottomY = seaLevelBlockBottomY) }

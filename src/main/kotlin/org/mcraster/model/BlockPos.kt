@@ -30,6 +30,8 @@ data class BlockPos(val x: Int, val y: Int, val z: Int) {
 
     fun plus(dx: Int, dy: Int, dz: Int) = BlockPos(x = x + dx, y = y + dy, z = z + dz)
 
+    fun toHorPos() = HorPos(x = x, z = z)
+
     companion object {
 
         fun getGlobalBlockIndex(regionIndex: Int, localChunkIndex: Int, localBlockIndex: Int) =
@@ -75,10 +77,48 @@ data class BlockPos(val x: Int, val y: Int, val z: Int) {
 
     }
 
+    data class HorPos(val x: Int, val z: Int) {
+
+        fun toHorPoint() = HorPoint(x = x.toBigDecimal(), z = z.toBigDecimal())
+
+    }
+
+    data class HorPosRect(val min: HorPos, val max: HorPos) {
+
+        init {
+            if (min.x >= max.x || min.z >= max.z) throw RuntimeException("$this has no size")
+        }
+
+        fun contains(p: HorPos) = p.x >= min.x && p.x <= max.x &&
+                                  p.z >= min.z && p.z <= max.z
+
+        fun toHorPointRect() = HorPointRect(min = min.toHorPoint(), max = max.toHorPoint())
+
+    }
+
+    data class Cube(val min: BlockPos, val max: BlockPos) {
+
+        init {
+            if (min.x >= max.x || min.z >= max.z || min.y >= max.y) throw RuntimeException("$this has no size")
+        }
+
+        fun contains(p: BlockPos) = p.x >= min.x && p.x <= max.x &&
+                                    p.y >= min.y && p.y <= max.y &&
+                                    p.z >= min.z && p.z <= max.z
+
+        fun toHorPosRect() = HorPosRect(min = min.toHorPos(), max = max.toHorPos())
+
+    }
+
     data class HorPoint(val x: BigDecimal, val z: BigDecimal)
 
-    data class HorRect(val min: HorPoint, val max: HorPoint) {
+    data class HorPointRect(val min: HorPoint, val max: HorPoint) {
 
+        init {
+            if (min.x >= max.x || min.z >= max.z) throw RuntimeException("$this has no size")
+        }
+
+        // TODO Why both ends included?
         fun contains(point: HorPoint) = point.x >= min.x && point.x <= max.x && point.z >= min.z && point.z <= max.z
 
     }
