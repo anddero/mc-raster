@@ -34,7 +34,7 @@ object LocalTest {
             pointConversionStrategy = BOUNDING_HORIZONTALLY_BUT_VERTICALLY_ROUNDED_TOWARDS_TOP_OF_BLOCK,
             seaLevelBlockBottomY = seaLevelBlockBottomY,
             softValidateBlockLimits = true
-        ).asDataSource().first()
+        ).asLazyData().use { it.first() }
 
         val worldLimits = DataSourceDescriptor(
             path = "$inputFilesDir/minMaxFilter.xyz",
@@ -43,7 +43,7 @@ object LocalTest {
             pointConversionStrategy = BOUNDING_HORIZONTALLY_BUT_VERTICALLY_ROUNDED_TOWARDS_TOP_OF_BLOCK,
             seaLevelBlockBottomY = MC_SEA_BLOCK_LEVEL,
             softValidateBlockLimits = false
-        ).asDataSource().firstTwo().let { (limit1, limit2) ->
+        ).asLazyData().firstTwo().let { (limit1, limit2) ->
             val xMin = min(limit1.x, limit2.x)
             val yMin = min(limit1.y, limit2.y)
             val zMin = min(limit1.z, limit2.z)
@@ -61,7 +61,7 @@ object LocalTest {
             seaLevelBlockBottomY = seaLevelBlockBottomY,
             softValidateBlockLimits = true,
             worldLimits = worldLimits
-        ).asDataSource()
+        ).asLazyData()
 
         val waterBodyDataSource = DataSourceDescriptor(
             path = "$inputFilesDir/waterbody.shp",
@@ -71,7 +71,7 @@ object LocalTest {
             seaLevelBlockBottomY = seaLevelBlockBottomY,
             softValidateBlockLimits = true,
             worldLimits = worldLimits
-        ).asDataSource()
+        ).asLazyData()
 
         val stoneObj3dDataSource = DataSourceDescriptor(
             path = "$inputFilesDir/obj3d.dump",
@@ -81,7 +81,7 @@ object LocalTest {
             blockTransform = { blocks ->
                 blocks.map { block -> block.plus(dx = spawnPos.x + 15, dy = spawnPos.y + 15, dz = spawnPos.z + 15) }
             }
-        ).asDataSource()
+        ).asLazyData()
 
         val markerPolesDataSource = DataSourceDescriptor(
             path = "$inputFilesDir/poles.xyz",
@@ -90,7 +90,8 @@ object LocalTest {
             pointConversionStrategy = BOUNDING_HORIZONTALLY_BUT_VERTICALLY_ROUNDED_TOWARDS_TOP_OF_BLOCK,
             seaLevelBlockBottomY = seaLevelBlockBottomY,
             softValidateBlockLimits = true
-        ).asDataSource().filter { false }
+        ).asLazyData()
+            .transform { it.filter { false } }
 
         val waterPoolDataSource = DataSourceDescriptor(
             path = "$inputFilesDir/pools.xyz",
@@ -99,7 +100,8 @@ object LocalTest {
             pointConversionStrategy = BOUNDING_HORIZONTALLY_BUT_VERTICALLY_ROUNDED_TOWARDS_TOP_OF_BLOCK,
             seaLevelBlockBottomY = seaLevelBlockBottomY,
             softValidateBlockLimits = true
-        ).asDataSource().filter { false }
+        ).asLazyData()
+            .transform { it.filter { false } }
 
         val worldConfig = WorldConfig(
             worldName = modelAndWorldName,

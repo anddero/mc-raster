@@ -1,18 +1,15 @@
 package org.mcraster.reader
 
 import org.mcraster.model.BlockPos
-import org.mcraster.util.FileUtils.asLinesDataSource
+import org.mcraster.util.FileUtils.asLazyLines
 import org.mcraster.util.OptionalUtils.orThrow
 import java.io.File
 
 object Obj3dReader {
 
-    fun readFile(
-        file: File
-    ) = file.asLinesDataSource()
-        .transform { Obj3dFileLinesTransformer(it.iterator()).asSequence() }
+    fun readFile(file: File) = file.asLazyLines().transform { Obj3dReader(it.iterator()).asSequence() }
 
-    private class Obj3dFileLinesTransformer(private val lineIter: Iterator<String>) : Iterator<BlockPos> {
+    private class Obj3dReader(private val lineIter: Iterator<String>) : Iterator<BlockPos> {
 
         private var line = lineIter.next() // ignore first line (Dimensions)
         private var charIter = emptyList<Char>().iterator()

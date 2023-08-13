@@ -4,10 +4,10 @@ import java.io.File
 
 object FileUtils {
 
-    fun File.asLinesDataSource(): DataSource<String> = FileLinesDataSource(this)
+    fun File.asLazyLines(): LazyData<String> = FileLinesLazyData(this)
 
-    private class FileLinesDataSource(private val file: File) : DataSource<String> {
-        override fun <R> use(block: (Sequence<String>) -> R) = file.useLines { lines -> block.invoke(lines) }
+    private class FileLinesLazyData(private val file: File) : LazyData<String>() {
+        override fun <R> use(consume: (Sequence<String>) -> R) = file.useLines { lineSeq -> consume(lineSeq) }
     }
 
 }
