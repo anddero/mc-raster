@@ -27,9 +27,9 @@ object DiskBoundModelBuilder {
         model: DiskBoundModel,
         heightMap: LazyData<BlockPos>,
         waterBodies: LazyData<BlockPos>,
-        stoneObj3d: LazyData<BlockPos>,
-        markerPoleCoordinates: LazyData<BlockPos>,
-        waterPoolCentroids: LazyData<BlockPos>,
+        stoneObj3d: LazyData<BlockPos> = LazyData.emptyLazyData(),
+        markerPoleCoordinates: LazyData<BlockPos> = LazyData.emptyLazyData(),
+        waterPoolCentroids: LazyData<BlockPos> = LazyData.emptyLazyData(),
         islandCentroids: LazyData<BlockPos> = LazyData.emptyLazyData()
     ): DiskBoundModel {
         model.buildTerrain(heightMap = heightMap)
