@@ -35,8 +35,8 @@ object JtsUtil {
                     val exteriorRingLEstYx = polygonLEstYx.getOuterShellLEstYxVertices()
                     val interiorRingsLEstYx = polygonLEstYx.getHolesLEstYxVertices()
                     Polygon(
-                        outerShellPolygonCorners = exteriorRingLEstYx.map(HorPointLEst97::toHorPoint),
-                        polygonCornersOfHoles = interiorRingsLEstYx.map { ring -> ring.map(HorPointLEst97::toHorPoint) }
+                        outerShellVertices = exteriorRingLEstYx.map(HorPointLEst97::toHorPoint),
+                        holesVertices = interiorRingsLEstYx.map { ring -> ring.map(HorPointLEst97::toHorPoint) }
                     )
                 }.toList()
                 .let { polygons -> Polygon.MultiPolygon(polygons) }

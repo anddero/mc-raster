@@ -1,26 +1,27 @@
 package org.mcraster.converters
 
-import org.locationtech.jts.geom.Coordinate
 import org.locationtech.jts.geom.GeometryCollection
-import org.locationtech.jts.geom.GeometryFactory
-import org.locationtech.jts.geom.LinearRing
-import org.locationtech.jts.geom.PrecisionModel
-import org.locationtech.jts.geom.impl.CoordinateArraySequence
 import org.mcraster.model.BlockPos.HorPoint
 import org.mcraster.model.BlockPos.HorPointRect
 import org.mcraster.model.BlockPos.HorPos
 import org.mcraster.model.BlockPos.HorPosRect
+import org.mcraster.util.JtsUtil.JtsPolygonUtil.getHolesVertices
+import org.mcraster.util.JtsUtil.JtsPolygonUtil.getOuterShellVertices
+import org.mcraster.util.JtsUtil.JtsPolygonUtil.makeZeroCenterJtsPolygon
+import org.mcraster.util.JtsUtil.JtsPolygonUtil.toZeroCenterJtsPolygon
 import org.mcraster.util.NumberUtils.roundDownToIntExact
 import java.awt.geom.Area
 import java.math.BigDecimal
 import org.locationtech.jts.geom.Polygon as JtsPolygon
 
 class Polygon(
-    outerShellPolygonCorners: List<HorPoint>,
-    polygonCornersOfHoles: List<List<HorPoint>>
+    outerShellVertices: List<HorPoint>,
+    holesVertices: List<List<HorPoint>>
 ) {
 
-    class PolygonMask(val origin: HorPos, val maskZx: Array<BooleanArray>): Iterator<HorPos> { // TODO Test iterator
+    class MultiPolygon(val polygons: List<Polygon>)
+
+    class PolygonRasterMask(val origin: HorPos, val maskZx: Array<BooleanArray>): Iterator<HorPos> { // TODO Test iterator
         private var nextZ = 0
         private var nextX = 0
 
@@ -51,7 +52,7 @@ class Polygon(
      * TODO We lose some accuracy due to rounding all coordinates down to Int before rasterization.
      *  The ideal solution should rasterize with BigDecimal coordinates directly.
      */
-    fun rasterize(canvas: HorPosRect, cropFirst: Boolean): PolygonMask? { // TODO Also test with cropFirst=true
+    fun createRasterMask(canvas: HorPosRect, cropFirst: Boolean): PolygonRasterMask? { // TODO Also test with cropFirst=true
         val lenX = canvas.max.x - canvas.min.x
         val lenZ = canvas.max.z - canvas.min.z
         if (lenX <= 0 || lenZ <= 0) throw RuntimeException("Invalid canvas size: $canvas")
@@ -59,13 +60,13 @@ class Polygon(
         val polygons = if (cropFirst) crop(canvas.toHorPointRect()) else listOf(this)
 
         val rasterized = polygons.asSequence()
-            .map { it.rasterizeNoCrop(canvas = canvas) }
+            .map { it.createRasterMaskNoCrop(canvas = canvas) }
             .reduceOrNull { a, b -> a.merge(b) }
 
-        return rasterized?.run { PolygonMask(origin = canvas.min, maskZx = this) }
+        return rasterized?.run { PolygonRasterMask(origin = canvas.min, maskZx = this) }
     }
 
-    private fun rasterizeNoCrop(canvas: HorPosRect): Array<BooleanArray> {
+    private fun createRasterMaskNoCrop(canvas: HorPosRect): Array<BooleanArray> {
         val lenX = canvas.max.x - canvas.min.x
         val lenZ = canvas.max.z - canvas.min.z
 
@@ -97,9 +98,9 @@ class Polygon(
      * Rasterize onto multiple canvases from different regions.
      * Provide the bounds of a large area and the canvas size. The area will be divided into square canvases of the
      * desired size (canvasSize x canvasSize). Min coordinate inclusive, max coordinate exclusive.
-     * This procedure is lazy and returns a DataSource from which the processing of each next canvas may be requested.
+     * This procedure is lazy and returns a LazyData from which the processing of each next canvas may be requested.
      */
-    fun rasterizeMulti(area: HorPosRect, canvasSize: Int, cropFirst: Boolean): Sequence<PolygonMask> { // TODO Test
+    fun createRasterMasks(area: HorPosRect, canvasSize: Int, cropFirst: Boolean): Sequence<PolygonRasterMask> { // TODO Test
         if (canvasSize <= 0) throw RuntimeException("Expected positive canvas size, given $canvasSize")
         return (area.min.x until area.max.x step canvasSize)
             .asSequence()
@@ -108,7 +109,7 @@ class Polygon(
                     .asSequence()
                     .map { startZ -> HorPos(x = startX, z = startZ) }
             }.map { startPos ->
-                rasterize(
+                createRasterMask(
                     canvas = HorPosRect(
                         min = startPos,
                         max = HorPos(x = startPos.x + canvasSize, z = startPos.z + canvasSize)
@@ -119,30 +120,30 @@ class Polygon(
     }
 
     fun crop(container: HorPointRect): List<Polygon> {
-        val geometry = zeroCenterPolygon.intersection(container.toZeroCenterJtsPolygon(center))
-        val polygons = when (geometry) {
-            is JtsPolygon -> listOf(geometry)
+        val jtsIntersection = zeroCenterPolygon.intersection(container.toZeroCenterJtsPolygon(center))
+        val polygons = when (jtsIntersection) {
+            is JtsPolygon -> sequenceOf(jtsIntersection)
             is GeometryCollection -> {
-                (0 until geometry.numGeometries)
-                    .map { geometry.getGeometryN(it) }
+                (0 until jtsIntersection.numGeometries)
+                    .asSequence()
+                    .map { jtsIntersection.getGeometryN(it) }
                     .map { it as JtsPolygon }
-                    .toList()
             }
-
-            else -> throw RuntimeException("Unhandled geometry type: ${geometry.geometryType}")
+            else -> throw RuntimeException("Unhandled geometry type: ${jtsIntersection.geometryType}")
         }
-        return polygons.filter { !it.isEmpty }
+        return polygons
+            .filter { !it.isEmpty }
             .map {
                 Polygon(
-                    outerShellPolygonCorners = it.getOuterShellPolygonCorners(offset = center),
-                    polygonCornersOfHoles = it.getPolygonCornersOfHoles(offset = center)
+                    outerShellVertices = it.getOuterShellVertices(offset = center),
+                    holesVertices = it.getHolesVertices(offset = center)
                 )
-            }
+            }.toList()
     }
 
-    fun getOuterShell() = zeroCenterPolygon.getOuterShellPolygonCorners(offset = center)
+    fun getOuterShell() = zeroCenterPolygon.getOuterShellVertices(offset = center)
 
-    fun getHoles() = zeroCenterPolygon.getPolygonCornersOfHoles(offset = center)
+    fun getHoles() = zeroCenterPolygon.getHolesVertices(offset = center)
 
     override fun toString(): String {
         return "Polygon(center=$center, zeroCenterPolygon=$zeroCenterPolygon)"
@@ -152,28 +153,26 @@ class Polygon(
     private val zeroCenterPolygon: JtsPolygon // x,y in JtsPolygon corresponds to x,z in model
 
     init {
-        polygonCornersOfHoles.asSequence().plusElement(outerShellPolygonCorners).forEach { polygonCorners ->
-            if (polygonCorners.size < 3) {
-                throw RuntimeException("Polygon must be made of at least 3 corner vertices, given $polygonCorners")
+        holesVertices
+            .asSequence()
+            .plusElement(outerShellVertices)
+            .forEach { vertices ->
+                if (vertices.size < 3) {
+                    throw RuntimeException("Polygon must be made of at least 3 corner vertices, given $vertices")
+                }
             }
-        }
-        center = outerShellPolygonCorners.getBoundingRectCenter()
+        center = outerShellVertices.getBoundingRectCenter()
         zeroCenterPolygon = makeZeroCenterJtsPolygon(
-            shellPolygonCorners = outerShellPolygonCorners,
-            polygonCornersOfHoles = polygonCornersOfHoles,
+            outerShellVertices = outerShellVertices,
+            holesVertices = holesVertices,
             center = center
         )
         if (!zeroCenterPolygon.isValid) {
-            throw RuntimeException(
-                "Invalid Polygon constructed from shell: $outerShellPolygonCorners" +
-                        " and holes: $polygonCornersOfHoles"
-            )
+            throw RuntimeException("Invalid Polygon constructed from shell: $outerShellVertices and holes: $holesVertices")
         }
     }
 
     companion object {
-
-        private val JTS_GEOMETRY_FACTORY = GeometryFactory(PrecisionModel(PrecisionModel.FLOATING))
 
         private fun mean(v1: BigDecimal, v2: BigDecimal) = (v1 + v2) / BigDecimal.valueOf(2)
 
@@ -184,59 +183,6 @@ class Polygon(
             val maxZ = maxOf { it.z }
             return HorPoint(x = mean(minX, maxX), z = mean(minZ, maxZ))
         }
-
-        private fun HorPoint.toZeroCenterCoordinate(center: HorPoint) =
-            Coordinate((x - center.x).toDouble(), (z - center.z).toDouble())
-
-        private fun List<HorPoint>.toZeroCenterLinearRing(center: HorPoint): LinearRing {
-            val zeroCenterCorners = this.asSequence().map { corner -> corner.toZeroCenterCoordinate(center) }
-            val closedListOfCorners = zeroCenterCorners.plusElement(zeroCenterCorners.first())
-            return LinearRing(
-                CoordinateArraySequence(closedListOfCorners.toList().toTypedArray()), JTS_GEOMETRY_FACTORY
-            )
-        }
-
-        private fun HorPointRect.toZeroCenterJtsPolygon(center: HorPoint): JtsPolygon {
-            val minXMaxZCorner = HorPoint(x = this.min.x, z = this.max.z)
-            val maxXMinZCorner = HorPoint(x = this.max.x, z = this.min.z)
-            return JtsPolygon(
-                listOf(this.min, minXMaxZCorner, this.max, maxXMinZCorner).toZeroCenterLinearRing(center),
-                emptyArray(),
-                JTS_GEOMETRY_FACTORY
-            )
-        }
-
-        private fun makeZeroCenterJtsPolygon(
-            shellPolygonCorners: List<HorPoint>,
-            polygonCornersOfHoles: List<List<HorPoint>>,
-            center: HorPoint
-        ) = JtsPolygon(
-            shellPolygonCorners.toZeroCenterLinearRing(center),
-            polygonCornersOfHoles
-                .map { holeCorners -> holeCorners.toZeroCenterLinearRing(center) }
-                .toTypedArray(),
-            JTS_GEOMETRY_FACTORY
-        )
-
-        private fun LinearRing.getPolygonCorners(offset: HorPoint): List<HorPoint> {
-            val points = coordinateSequence.toCoordinateArray()
-                .asSequence()
-                .map { HorPoint(x = it.x.toBigDecimal(), z = it.y.toBigDecimal()) }
-                .map { HorPoint(x = it.x + offset.x, z = it.z + offset.z) }
-                .toList()
-            if (points.first() != points.last()) throw RuntimeException("Expected closed ring of vertices")
-            return points.dropLast(1)
-        }
-
-        private fun JtsPolygon.getOuterShellPolygonCorners(offset: HorPoint) =
-            exteriorRing.getPolygonCorners(offset = offset)
-
-        private fun JtsPolygon.getPolygonCornersOfHoles(offset: HorPoint) =
-            (0 until numInteriorRing)
-                .asSequence()
-                .map { holeIndex -> getInteriorRingN(holeIndex) }
-                .map { ring -> ring.getPolygonCorners(offset = offset) }
-                .toList()
 
         /**
          * Merge a canvas into this one.

@@ -2,33 +2,39 @@ package org.mcraster.reader
 
 import org.geotools.data.DataStoreFinder
 import org.geotools.data.simple.SimpleFeatureIterator
-import org.locationtech.jts.geom.LinearRing
-import org.locationtech.jts.geom.MultiPolygon
-import org.mcraster.converters.BlockPosLEst97.HorPointLEst97
-import org.mcraster.converters.Polygon
 import org.mcraster.model.BlockPos
 import org.mcraster.model.BlockPos.HorPosRect
 import org.mcraster.reader.DataSourceDescriptor.PointConversionStrategy
 import org.mcraster.reader.DataSourceDescriptor.PointConversionStrategy.VERTICALLY_FIXED_AT_SEA_LEVEL
-import org.mcraster.util.DataSource
-import org.mcraster.util.DataSource.Companion.asDataSource
+import org.mcraster.util.LazyData
+import org.mcraster.util.LazyData.Companion.closeableLazyData
+import org.mcraster.util.JtsUtil.JtsMultiPolygonUtil.fromLEstYx
 import org.opengis.feature.simple.SimpleFeature
 import java.io.File
-import org.locationtech.jts.geom.Polygon as JtsPolygon
+import org.locationtech.jts.geom.MultiPolygon as JtsMultiPolygon
 
 object ShapefileReader { // Shapefile (.shp) reading capability
 
-    fun readPolygonsFromShpFileLEstYx(shpFileLEstYx: File): DataSource<List<Polygon>> {
+    fun readPolygonsFromShpFileLEstYx(shpFileLEstYx: File) = closeableLazyData {
         val dataStoreLEstYx = DataStoreFinder.getDataStore(mapOf("url" to shpFileLEstYx.toURI().toString()))
-        return dataStoreLEstYx
+        dataStoreLEstYx
             .getFeatureSource(dataStoreLEstYx.typeNames.single())
             .features
             .features()
-            .asDataSource { featureLEstYxIterator ->
-                OpenedSimpleFeatureIteratorWrapper(featureLEstYxIterator).asSequence()
-            }.map { featureLEstYx ->
+    }.ignoreCloseFailure { throwable ->
+        if (throwable !is IllegalArgumentException) false
+        else if (throwable.message.isNullOrBlank()) false
+        else if (!throwable.message!!.contains("does not hold the lock for the URL")) false
+        else {
+            System.err.println("Ignoring exception thrown when attempted to close Shapefile, message: ${throwable.message}")
+            true
+        }
+    }.transform { featureLEstYxIterator ->
+        AsIterator(featureLEstYxIterator)
+            .asSequence()
+            .map { featureLEstYx ->
                 val geometryLEstYx = featureLEstYx.defaultGeometryProperty.value
-                if (geometryLEstYx is MultiPolygon) multiPolygonLEstYxToPolygons(geometryLEstYx)
+                if (geometryLEstYx is JtsMultiPolygon) geometryLEstYx.fromLEstYx()
                 else throw RuntimeException("Unexpected geometry: $geometryLEstYx")
             }
     }
@@ -38,61 +44,24 @@ object ShapefileReader { // Shapefile (.shp) reading capability
         pointConversionStrategy: PointConversionStrategy,
         seaLevelBlockBottomY: Int,
         limits: HorPosRect
-    ): DataSource<BlockPos> {
+    ): LazyData<BlockPos> {
         when (pointConversionStrategy) {
             VERTICALLY_FIXED_AT_SEA_LEVEL -> {} // currently only accepted strategy
             else -> throw RuntimeException("Unexpected conversion strategy: $pointConversionStrategy")
         }
-        return readPolygonsFromShpFileLEstYx(shpFileLEstYx)
-            .map { polygonList ->
-                polygonList
-                    .asSequence()
-                    .flatMap { polygon ->
-                        polygon
-                            .rasterizeMulti(area = limits, canvasSize = 200, cropFirst = true)
-                            .flatMap { it.asSequence() }
-                    }
-            }.transform { horPosSeqSeq ->
-                horPosSeqSeq.flatMap { horPosSeq ->
-                    horPosSeq.map { horPos -> BlockPos(x = horPos.x, y = seaLevelBlockBottomY, z = horPos.z) }
-                }
-            }
+        return readPolygonsFromShpFileLEstYx(shpFileLEstYx).transform { multiPolygons ->
+            // TODO Log when the rasterization happens with respect to world creation, to understand how flatMap behaves in the context of a higher order sequences
+            multiPolygons
+                .flatMap { multiPolygon -> multiPolygon.polygons.asSequence() }
+                .flatMap { polygon -> polygon.createRasterMasks(area = limits, canvasSize = 200, cropFirst = true) }
+                .flatMap { it.asSequence() }
+                .map { horPos -> BlockPos(x = horPos.x, y = seaLevelBlockBottomY, z = horPos.z) }
+        }
     }
 
-    private class OpenedSimpleFeatureIteratorWrapper(private val src: SimpleFeatureIterator) : Iterator<SimpleFeature> {
+    private class AsIterator(private val src: SimpleFeatureIterator) : Iterator<SimpleFeature> {
         override fun hasNext() = src.hasNext()
         override fun next(): SimpleFeature = src.next()
     }
-
-    private fun multiPolygonLEstYxToPolygons(multiPolygon: MultiPolygon) =
-        (0 until multiPolygon.numGeometries)
-            .map { multiPolygon.getGeometryN(it) }
-            .map {
-                if (it is JtsPolygon) it
-                else throw RuntimeException("Unexpected geometry: $it")
-            }.map { polygonLEstYx ->
-                val exteriorRingLEstYx = getPolygonLEstYxOuterShellCorners(polygonLEstYx)
-                val interiorRingsLEstYx = getPolygonLEstYxCornersOfHoles(polygonLEstYx)
-                Polygon(
-                    outerShellPolygonCorners = exteriorRingLEstYx.map(HorPointLEst97::toHorPoint),
-                    polygonCornersOfHoles = interiorRingsLEstYx.map { it.map(HorPointLEst97::toHorPoint) }
-                )
-            }
-
-    private fun getPolygonLEstYxCorners(linearRingLEstYx: LinearRing): List<HorPointLEst97> {
-        // TODO This is a duplicate of a similar function from Polygon impl, move to JtsUtil?
-        val coordinatesLEstYx = linearRingLEstYx.coordinateSequence.toCoordinateArray()
-        val points = coordinatesLEstYx.map { HorPointLEst97(x = it.y.toBigDecimal(), y = it.x.toBigDecimal()) }
-        if (points.first() != points.last()) throw RuntimeException("Expected closed ring of vertices")
-        return points.dropLast(1)
-    }
-
-    private fun getPolygonLEstYxOuterShellCorners(polygonLEstYx: JtsPolygon) =
-        getPolygonLEstYxCorners(linearRingLEstYx = polygonLEstYx.exteriorRing)
-
-    private fun getPolygonLEstYxCornersOfHoles(polygonLEstYx: JtsPolygon) =
-        (0 until polygonLEstYx.numInteriorRing)
-            .map { holeIndex -> polygonLEstYx.getInteriorRingN(holeIndex) }
-            .map { getPolygonLEstYxCorners(linearRingLEstYx = it) }
 
 }
