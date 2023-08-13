@@ -7,7 +7,8 @@ import org.mcraster.reader.DataSourceDescriptor.DataFormat.LINES_LEST97_YXH_DOUB
 import org.mcraster.reader.DataSourceDescriptor.DataFormat.OBJ_3D
 import org.mcraster.reader.DataSourceDescriptor.DataFormat.POLYGON_SHP_LEST97_YX
 import org.mcraster.reader.Lest97Reader.linesLest97YxhDecimal
-import org.mcraster.util.DataSource
+import org.mcraster.reader.ShapefileReader.readPolygonsFromShpFileLEstYx
+import org.mcraster.util.LazyData
 import java.io.File
 
 class DataSourceDescriptor(
@@ -21,27 +22,27 @@ class DataSourceDescriptor(
     private val blockTransform: ((Sequence<BlockPos>) -> Sequence<BlockPos>)? = null
 ) {
 
-    fun asDataSource(): DataSource<BlockPos> {
+    fun asLazyData(): LazyData<BlockPos> {
         val source: File = when (type) {
             DataSourceType.RELATIVE_FILE -> File(path)
         }
-        var data: DataSource<BlockPos> = when(format) {
+        var lazyData: LazyData<BlockPos> = when(format) {
             OBJ_3D -> Obj3dReader.readFile(source)
                 .limited(worldLimits)
             LINES_LEST97_YXH_DOUBLE -> linesLest97YxhDecimal(source, pointConversionStrategy!!, seaLevelBlockBottomY!!)
                 .limited(worldLimits)
-            POLYGON_SHP_LEST97_YX -> ShapefileReader.readPolygonsFromShpFileLEstYx(source, pointConversionStrategy!!, seaLevelBlockBottomY!!, worldLimits!!.toHorPosRect())
+            POLYGON_SHP_LEST97_YX -> readPolygonsFromShpFileLEstYx(source, pointConversionStrategy!!, seaLevelBlockBottomY!!, worldLimits!!.toHorPosRect())
         }
-        blockTransform?.let { data = data.transform(it) }
+        blockTransform?.let { lazyData = lazyData.transform(it) }
         if (softValidateBlockLimits) {
-            data = data.onEach(::softValidateBlockLimit)
+            lazyData = lazyData.transform { it.onEach(::softValidateBlockLimit) }
         }
-        return data
+        return lazyData
     }
 
-    private fun DataSource<BlockPos>.limited(limits: Cube?): DataSource<BlockPos> {
+    private fun LazyData<BlockPos>.limited(limits: Cube?): LazyData<BlockPos> {
         if (limits == null) return this
-        return this.filter { limits.contains(it) }
+        return this.transform { it.filter { block -> limits.contains(block) } }
     }
 
     enum class DataSourceType {
