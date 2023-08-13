@@ -3,7 +3,7 @@ package org.mcraster.builder
 import org.mcraster.model.DiskBoundModel
 import org.mcraster.model.BlockType
 import org.mcraster.model.BlockPos
-import org.mcraster.util.DataSource
+import org.mcraster.util.LazyData
 
 object DiskBoundModelBuilder {
 
@@ -25,16 +25,16 @@ object DiskBoundModelBuilder {
 
     fun build(
         model: DiskBoundModel,
-        heightMap: DataSource<BlockPos>,
-        waterBodies: DataSource<BlockPos>,
-        stoneObj3d: DataSource<BlockPos>,
-        markerPoleCoordinates: DataSource<BlockPos>,
-        waterPoolCentroids: DataSource<BlockPos>,
-        islandCentroids: DataSource<BlockPos> = DataSource.emptyDataSource()
+        heightMap: LazyData<BlockPos>,
+        waterBodies: LazyData<BlockPos>,
+        stoneObj3d: LazyData<BlockPos>,
+        markerPoleCoordinates: LazyData<BlockPos>,
+        waterPoolCentroids: LazyData<BlockPos>,
+        islandCentroids: LazyData<BlockPos> = LazyData.emptyLazyData()
     ): DiskBoundModel {
         model.buildTerrain(heightMap = heightMap)
         model.buildWaterBodies(waterBodies = waterBodies)
-        model.buildObj3d(blocks = stoneObj3d, blockType = BlockType.STONE)
+        model.buildObj3d(obj3d = stoneObj3d, blockType = BlockType.STONE)
         model.buildMarkerPoles(markerPoles = markerPoleCoordinates)
         model.buildWaterPools(waterPools = waterPoolCentroids)
         model.buildIslands(islandCentroids = islandCentroids)
@@ -43,59 +43,69 @@ object DiskBoundModelBuilder {
         return model
     }
 
-    private fun DiskBoundModel.buildTerrain(heightMap: DataSource<BlockPos>) = heightMap.forEach { highestBlock ->
-        this.setBlock(BlockPos(x = highestBlock.x, y = 0, z = highestBlock.z), BlockType.UNBREAKABLE_STONE)
-        for (y in 1 .. highestBlock.y) {
-            this.setBlock(BlockPos(x = highestBlock.x, y = y, z = highestBlock.z), BlockType.SOIL)
-        }
-    }
-
-    private fun DiskBoundModel.buildWaterBodies(waterBodies: DataSource<BlockPos>) = waterBodies.forEach { highestBlock ->
-        this.setBlock(BlockPos(x = highestBlock.x, y = 0, z = highestBlock.z), BlockType.UNBREAKABLE_STONE)
-        for (y in 1 .. highestBlock.y) {
-            this.setBlock(BlockPos(x = highestBlock.x, y = y, z = highestBlock.z), BlockType.WATER)
-        }
-    }
-
-    private fun DiskBoundModel.buildObj3d(blocks: DataSource<BlockPos>, blockType: BlockType) =
-        blocks.forEach { block -> this.setBlock(block, blockType) }
-
-    private fun DiskBoundModel.buildMarkerPoles(markerPoles: DataSource<BlockPos>) =
-        markerPoles.forEach { highestBlock ->
-            this.setBlock(BlockPos(x = highestBlock.x, y = 0, z = highestBlock.z), BlockType.UNBREAKABLE_STONE)
-            for (y in 1 .. highestBlock.y) {
-                this.setBlock(BlockPos(x = highestBlock.x, y = y, z = highestBlock.z), BlockType.STONE)
+    private fun DiskBoundModel.buildTerrain(heightMap: LazyData<BlockPos>) = heightMap.use { topBlocks ->
+        topBlocks.forEach { topPos ->
+            setBlock(BlockPos(x = topPos.x, y = 0, z = topPos.z), BlockType.UNBREAKABLE_STONE)
+            for (y in 1..topPos.y) {
+                setBlock(BlockPos(x = topPos.x, y = y, z = topPos.z), BlockType.SOIL)
             }
         }
+    }
 
-    private fun DiskBoundModel.buildWaterPools(waterPools: DataSource<BlockPos>) {
+    private fun DiskBoundModel.buildWaterBodies(waterBodies: LazyData<BlockPos>) = waterBodies.use { topBlocks ->
+        topBlocks.forEach { topPos ->
+            setBlock(BlockPos(x = topPos.x, y = 0, z = topPos.z), BlockType.UNBREAKABLE_STONE)
+            for (y in 1..topPos.y) {
+                setBlock(BlockPos(x = topPos.x, y = y, z = topPos.z), BlockType.WATER)
+            }
+        }
+    }
+
+    private fun DiskBoundModel.buildObj3d(obj3d: LazyData<BlockPos>, blockType: BlockType) = obj3d.use { blocks ->
+        blocks.forEach { pos -> setBlock(pos, blockType) }
+    }
+
+    private fun DiskBoundModel.buildMarkerPoles(markerPoles: LazyData<BlockPos>) = markerPoles.use { topBlocks ->
+        topBlocks.forEach { topPos ->
+            setBlock(BlockPos(x = topPos.x, y = 0, z = topPos.z), BlockType.UNBREAKABLE_STONE)
+            for (y in 1..topPos.y) {
+                setBlock(BlockPos(x = topPos.x, y = y, z = topPos.z), BlockType.STONE)
+            }
+        }
+    }
+
+    private fun DiskBoundModel.buildWaterPools(waterPools: LazyData<BlockPos>) {
         val poolWidth = 10
         val poolHeight = 5
-        waterPools.forEach { highestBlock ->
-            for (x in -poolWidth / 2 until poolWidth / 2) {
-                for (z in -poolWidth / 2 until poolWidth / 2) {
-                    for (y in highestBlock.y downTo highestBlock.y - poolHeight + 1) {
-                        this.setBlock(
-                            BlockPos(x = highestBlock.x + x, y = y, z = highestBlock.z + z),
-                            BlockType.WATER
-                        )
+        waterPools.use { topBlocks ->
+            topBlocks.forEach { topPos ->
+                for (x in -poolWidth / 2 until poolWidth / 2) {
+                    for (z in -poolWidth / 2 until poolWidth / 2) {
+                        for (y in topPos.y downTo topPos.y - poolHeight + 1) {
+                            this.setBlock(
+                                BlockPos(x = topPos.x + x, y = y, z = topPos.z + z),
+                                BlockType.WATER
+                            )
+                        }
                     }
                 }
             }
         }
     }
 
-    private fun DiskBoundModel.buildIslands(islandCentroids: DataSource<BlockPos>) {
+    private fun DiskBoundModel.buildIslands(islandCentroids: LazyData<BlockPos>) {
         val spawnIslandWidth = 50
         val spawnIslandHeight = 5
-        islandCentroids.forEach { centroid ->
-            for (x in -spawnIslandWidth / 2 until spawnIslandWidth / 2) {
-                for (z in -spawnIslandWidth / 2 until spawnIslandWidth / 2) {
-                    for (y in 0 downTo -spawnIslandHeight + 1) {
-                        this.setBlock(
-                            BlockPos(x = centroid.x + x, y = y, centroid.z + z),
-                            BlockType.SOIL_WITH_GRASS
-                        )
+        islandCentroids.use { centerBlocks ->
+            centerBlocks.forEach { centerPos ->
+                for (x in -spawnIslandWidth / 2 until spawnIslandWidth / 2) {
+                    for (z in -spawnIslandWidth / 2 until spawnIslandWidth / 2) {
+                        for (y in 0 downTo -spawnIslandHeight + 1) {
+                            this.setBlock(
+                                BlockPos(x = centerPos.x + x, y = y, centerPos.z + z),
+                                BlockType.SOIL_WITH_GRASS
+                            )
+                        }
                     }
                 }
             }
