@@ -28,7 +28,7 @@ object LocalTest {
         val modelAndWorldName = "CustomArea1-Debug"
 
         val spawnPos = DataSourceDescriptor(
-            path = "$inputFilesDir/debug-spawn.txt",
+            path = "$inputFilesDir/spawn.xyz",
             type = RELATIVE_FILE,
             format = LINES_LEST97_YXH_DOUBLE,
             pointConversionStrategy = BOUNDING_HORIZONTALLY_BUT_VERTICALLY_ROUNDED_TOWARDS_TOP_OF_BLOCK,
@@ -54,7 +54,7 @@ object LocalTest {
         }
 
         val heightMapDataSource = DataSourceDescriptor(
-            path = "$inputFilesDir/debug-heightmap.txt",
+            path = "$inputFilesDir/heightmap.xyz",
             type = RELATIVE_FILE,
             format = LINES_LEST97_YXH_DOUBLE,
             pointConversionStrategy = BOUNDING_HORIZONTALLY_BUT_VERTICALLY_ROUNDED_TOWARDS_TOP_OF_BLOCK,
