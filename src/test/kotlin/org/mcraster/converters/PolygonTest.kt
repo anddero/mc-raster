@@ -17,36 +17,36 @@ class PolygonTest {
         // Zero points
         assertThrows<RuntimeException> {
             Polygon(
-                outerShellPolygonCorners = emptyList(),
-                polygonCornersOfHoles = emptyList()
+                outerShellVertices = emptyList(),
+                holesVertices = emptyList()
             )
         }
         // One point
         assertThrows<RuntimeException> {
             Polygon(
-                outerShellPolygonCorners = listOf(p(0.0, 0.0)),
-                polygonCornersOfHoles = emptyList()
+                outerShellVertices = listOf(p(0.0, 0.0)),
+                holesVertices = emptyList()
             )
         }
         // Two points
         assertThrows<RuntimeException> {
             Polygon(
-                outerShellPolygonCorners = listOf(p(0.0, 1.0), p(3.0, 4.0)),
-                polygonCornersOfHoles = emptyList()
+                outerShellVertices = listOf(p(0.0, 1.0), p(3.0, 4.0)),
+                holesVertices = emptyList()
             )
         }
         // Three points with repeated point
         assertThrows<RuntimeException> {
             Polygon(
-                outerShellPolygonCorners = listOf(p(2.0, 0.5), p(1.0, 3.2), p(2.0, 0.5)),
-                polygonCornersOfHoles = emptyList()
+                outerShellVertices = listOf(p(2.0, 0.5), p(1.0, 3.2), p(2.0, 0.5)),
+                holesVertices = emptyList()
             )
         }
         // Shell lines intersect
         assertThrows<RuntimeException> {
             Polygon(
-                outerShellPolygonCorners = listOf(p(0.0, 0.0), p(0.0, 3.0), p(3.0, 0.0), p(3.0, 3.0)),
-                polygonCornersOfHoles = emptyList()
+                outerShellVertices = listOf(p(0.0, 0.0), p(0.0, 3.0), p(3.0, 0.0), p(3.0, 3.0)),
+                holesVertices = emptyList()
             )
         }
     }
@@ -57,40 +57,40 @@ class PolygonTest {
         // Zero points
         assertThrows<RuntimeException> {
             Polygon(
-                outerShellPolygonCorners = square,
-                polygonCornersOfHoles = listOf(emptyList())
+                outerShellVertices = square,
+                holesVertices = listOf(emptyList())
             )
         }
         // One point
         assertThrows<RuntimeException> {
             Polygon(
-                outerShellPolygonCorners = square,
-                polygonCornersOfHoles = listOf(listOf(p(1.0, 3.0)))
+                outerShellVertices = square,
+                holesVertices = listOf(listOf(p(1.0, 3.0)))
             )
         }
         // Two points
         assertThrows<RuntimeException> {
             Polygon(
-                outerShellPolygonCorners = square,
-                polygonCornersOfHoles = listOf(listOf(p(2.0, 3.5), p(3.0, 2.3)))
+                outerShellVertices = square,
+                holesVertices = listOf(listOf(p(2.0, 3.5), p(3.0, 2.3)))
             )
         }
         // Three points with repeated point
         assertThrows<RuntimeException> {
             Polygon(
-                outerShellPolygonCorners = square,
-                polygonCornersOfHoles = listOf(listOf(p(4.0, 2.0), p(3.0, 5.1), p(3.0, 5.1)))
+                outerShellVertices = square,
+                holesVertices = listOf(listOf(p(4.0, 2.0), p(3.0, 5.1), p(3.0, 5.1)))
             )
         }
         // Hole equals shell
         assertThrows<RuntimeException> {
-            Polygon(outerShellPolygonCorners = square, polygonCornersOfHoles = listOf(square))
+            Polygon(outerShellVertices = square, holesVertices = listOf(square))
         }
         // Holes make up the shell
         assertThrows<RuntimeException> {
             Polygon(
-                outerShellPolygonCorners = square,
-                polygonCornersOfHoles = listOf(
+                outerShellVertices = square,
+                holesVertices = listOf(
                     listOf(p(0.0, 0.0), p(0.0, 5.0), p(3.0, 5.0), p(3.0, 0.0)),
                     listOf(p(3.0, 0.0), p(3.0, 5.0), p(5.0, 5.0), p(5.0, 0.0))
                 )
@@ -99,22 +99,22 @@ class PolygonTest {
         // Hole intersects shell bounds
         assertThrows<RuntimeException> {
             Polygon(
-                outerShellPolygonCorners = square,
-                polygonCornersOfHoles = listOf(listOf(p(-1.0, 2.0), p(-1.0, 3.0), p(1.0, 3.0), p(1.0, 2.0)))
+                outerShellVertices = square,
+                holesVertices = listOf(listOf(p(-1.0, 2.0), p(-1.0, 3.0), p(1.0, 3.0), p(1.0, 2.0)))
             )
         }
         // Hole at the side of the shell
         assertThrows<RuntimeException> {
             Polygon(
-                outerShellPolygonCorners = square,
-                polygonCornersOfHoles = listOf(listOf(p(0.0, 2.0), p(0.0, 3.0), p(1.0, 3.0), p(1.0, 2.0)))
+                outerShellVertices = square,
+                holesVertices = listOf(listOf(p(0.0, 2.0), p(0.0, 3.0), p(1.0, 3.0), p(1.0, 2.0)))
             )
         }
         // Hole outside the shell
         assertThrows<RuntimeException> {
             Polygon(
-                outerShellPolygonCorners = square,
-                polygonCornersOfHoles = listOf(listOf(p(-1.0, -1.0), p(-1.0, 0.0), p(0.0, -1.0)))
+                outerShellVertices = square,
+                holesVertices = listOf(listOf(p(-1.0, -1.0), p(-1.0, 0.0), p(0.0, -1.0)))
             )
         }
     }
@@ -123,8 +123,8 @@ class PolygonTest {
     fun constructTriangle() {
         val triangle = listOf(p(0.0, 0.0), p(0.0, 1.0), p(1.0, 0.0))
         val polygon = Polygon(
-            outerShellPolygonCorners = triangle,
-            polygonCornersOfHoles = emptyList()
+            outerShellVertices = triangle,
+            holesVertices = emptyList()
         )
         val tolerance = BigDecimal.valueOf(0.0)
         assertTrue { areSameRings(triangle, polygon.getOuterShell(), tolerance) }
@@ -135,8 +135,8 @@ class PolygonTest {
     fun constructRect() {
         val rect = listOf(p(0.0, 0.0), p(0.0, 1.0), p(1.0, 1.0), p(1.0, 0.0))
         val polygon = Polygon(
-            outerShellPolygonCorners = rect,
-            polygonCornersOfHoles = emptyList()
+            outerShellVertices = rect,
+            holesVertices = emptyList()
         )
         val tolerance = BigDecimal.valueOf(0.0)
         assertTrue { areSameRings(rect, polygon.getOuterShell(), tolerance) }
@@ -148,8 +148,8 @@ class PolygonTest {
         val rect = listOf(p(0.0, 0.0), p(0.0, 1.0), p(1.0, 1.0), p(1.0, 0.0))
         val triangle = listOf(p(0.5, 0.5), p(0.6, 0.7), p(0.7, 0.5))
         val polygon = Polygon(
-            outerShellPolygonCorners = rect,
-            polygonCornersOfHoles = listOf(triangle)
+            outerShellVertices = rect,
+            holesVertices = listOf(triangle)
         )
         val tolerance = BigDecimal.valueOf(0.0)
         assertTrue { areSameRings(rect, polygon.getOuterShell(), tolerance) }
@@ -163,7 +163,7 @@ class PolygonTest {
         val rect = listOf(p(0.0, 0.0), p(0.0, 1.0), p(1.0, 1.0), p(1.0, 0.0))
         val cropRect = BlockPos.HorPointRect(p(5.0, 5.0), p(6.0, 6.0))
 
-        val polygon = Polygon(outerShellPolygonCorners = rect, polygonCornersOfHoles = emptyList())
+        val polygon = Polygon(outerShellVertices = rect, holesVertices = emptyList())
         val croppedList = polygon.crop(cropRect)
 
         assertTrue { croppedList.isEmpty() }
@@ -177,7 +177,7 @@ class PolygonTest {
         val expectedLeft = listOf(p(0.0, 0.0), p(0.0, 1.0), p(0.5, 1.0), p(0.5, 0.0))
         val expectedRight = listOf(p(0.5, 0.0), p(0.5, 1.0), p(1.0, 1.0), p(1.0, 0.0))
 
-        val polygon = Polygon(outerShellPolygonCorners = rect, polygonCornersOfHoles = emptyList())
+        val polygon = Polygon(outerShellVertices = rect, holesVertices = emptyList())
         val croppedListLeft = polygon.crop(cropRectLeft)
         val croppedListRight = polygon.crop(cropRectRight)
 
@@ -200,7 +200,7 @@ class PolygonTest {
         val expectedOne = listOf(p(0.0, 0.0), p(0.0, 0.6875), p(0.3, 0.5), p(0.25, 0.0))
         val expectedTwo = listOf(p(0.36, 0.0), p(0.68, 1.0), p(1.0, 1.0), p(1.0, 0.0))
 
-        val polygon = Polygon(outerShellPolygonCorners = lake, polygonCornersOfHoles = emptyList())
+        val polygon = Polygon(outerShellVertices = lake, holesVertices = emptyList())
         val croppedList = polygon.crop(cropRect)
 
         assertEquals(2, croppedList.size)
@@ -223,8 +223,8 @@ class PolygonTest {
          *   (0, 1) ------- (1, 1)
          */
         val shell = listOf(p(0.0, 0.0), p(1.0, 0.0), p(1.0, 1.0), p(0.0, 1.0))
-        val polygon = Polygon(outerShellPolygonCorners = shell, polygonCornersOfHoles = emptyList())
-        val rasterized = polygon.rasterize(HorPosRect(HorPos(-1, -1), HorPos(3, 3)), false)
+        val polygon = Polygon(outerShellVertices = shell, holesVertices = emptyList())
+        val rasterized = polygon.createRasterMask(HorPosRect(HorPos(-1, -1), HorPos(3, 3)), false)
         /**
          *    -1 0 1 2
          * -1  . . . .
@@ -239,15 +239,15 @@ class PolygonTest {
                 booleanArrayOf(false, false, false, false),
                 booleanArrayOf(false, false, false, false)
             ),
-            rasterized.maskZx
+            rasterized!!.maskZx
         )
     }
 
     @Test
     fun rasterizeTooSmallSquare() {
         val shell = listOf(p(0.0, 0.0), p(0.5, 0.0), p(0.5, 0.5), p(0.0, 0.5))
-        val polygon = Polygon(outerShellPolygonCorners = shell, polygonCornersOfHoles = emptyList())
-        val rasterized = polygon.rasterize(HorPosRect(HorPos(-1, -1), HorPos(3, 3)), false)
+        val polygon = Polygon(outerShellVertices = shell, holesVertices = emptyList())
+        val rasterized = polygon.createRasterMask(HorPosRect(HorPos(-1, -1), HorPos(3, 3)), false)
         assertArrayEquals(
             arrayOf(
                 booleanArrayOf(false, false, false, false),
@@ -255,15 +255,15 @@ class PolygonTest {
                 booleanArrayOf(false, false, false, false),
                 booleanArrayOf(false, false, false, false)
             ),
-            rasterized.maskZx
+            rasterized!!.maskZx
         )
     }
 
     @Test
     fun rasterize2x2Square() {
         val shell = listOf(p(0.99, 0.99), p(2.01, 0.99), p(2.01, 2.01), p(0.99, 2.01))
-        val polygon = Polygon(outerShellPolygonCorners = shell, polygonCornersOfHoles = emptyList())
-        val rasterized = polygon.rasterize(HorPosRect(HorPos(-1, -1), HorPos(4, 4)), false)
+        val polygon = Polygon(outerShellVertices = shell, holesVertices = emptyList())
+        val rasterized = polygon.createRasterMask(HorPosRect(HorPos(-1, -1), HorPos(4, 4)), false)
         assertArrayEquals(
             arrayOf(
                 booleanArrayOf(false, false, false, false, false),
@@ -272,7 +272,7 @@ class PolygonTest {
                 booleanArrayOf(false, false, false, false, false),
                 booleanArrayOf(false, false, false, false, false)
             ),
-            rasterized.maskZx
+            rasterized!!.maskZx
         )
     }
 
@@ -364,8 +364,8 @@ class PolygonTest {
     fun rasterizeTriangleWithHole() {
         val shell = listOf(p(15, 10), p(3,13), p(6,2))
         val hole = listOf(p(10, 9), p(6, 10), p(8, 6))
-        val polygon = Polygon(outerShellPolygonCorners = shell, polygonCornersOfHoles = listOf(hole))
-        val rasterized = polygon.rasterize(canvas = HorPosRect(min = HorPos(x = 2, z = 1), max = HorPos(16, 14)), cropFirst = false)
+        val polygon = Polygon(outerShellVertices = shell, holesVertices = listOf(hole))
+        val rasterized = polygon.createRasterMask(canvas = HorPosRect(min = HorPos(x = 2, z = 1), max = HorPos(16, 14)), cropFirst = false)
         assertArrayEquals(
             arrayOf(
                 L(0,0,0,0,0,0,0,0,0,0,0,0,0,0),
@@ -382,15 +382,15 @@ class PolygonTest {
                 L(0,0,1,1,1,0,0,0,0,0,0,0,0,0),
                 L(0,0,0,0,0,0,0,0,0,0,0,0,0,0)
             ),
-            rasterized.maskZx
+            rasterized!!.maskZx
         )
     }
 
     @Test
     fun rasterizeOutOfBoundsTriangle() {
         val shell = listOf(p(15, 10), p(3,13), p(6,2))
-        val polygon = Polygon(outerShellPolygonCorners = shell, polygonCornersOfHoles = emptyList())
-        val rasterized = polygon.rasterize(canvas = HorPosRect(min = HorPos(x = 2, z = 5), max = HorPos(12, 14)), cropFirst = false)
+        val polygon = Polygon(outerShellVertices = shell, holesVertices = emptyList())
+        val rasterized = polygon.createRasterMask(canvas = HorPosRect(min = HorPos(x = 2, z = 5), max = HorPos(12, 14)), cropFirst = false)
         assertArrayEquals(
             arrayOf(
                 L(0,0,0,0,1,1,1,1,0,0),
@@ -403,27 +403,27 @@ class PolygonTest {
                 L(0,0,1,1,1,0,0,0,0,0),
                 L(0,0,0,0,0,0,0,0,0,0)
             ),
-            rasterized.maskZx
+            rasterized!!.maskZx
         )
     }
 
     private fun assertIntTriangleRasterization(p1: BlockPos.HorPoint, p2: BlockPos.HorPoint, p3: BlockPos.HorPoint,
                                                minX: Int, minZ: Int, maxX: Int, maxZ: Int, expected: Array<BooleanArray>) {
         val shell = listOf(p1, p2, p3)
-        val polygon = Polygon(outerShellPolygonCorners = shell, polygonCornersOfHoles = emptyList())
+        val polygon = Polygon(outerShellVertices = shell, holesVertices = emptyList())
         val min = HorPos(x = minX, z = minZ)
-        val rasterized = polygon.rasterize(canvas = HorPosRect(min = min, max = HorPos(maxX, maxZ)), cropFirst = false)
-        assertEquals(min, rasterized.origin)
+        val rasterized = polygon.createRasterMask(canvas = HorPosRect(min = min, max = HorPos(maxX, maxZ)), cropFirst = false)
+        assertEquals(min, rasterized!!.origin)
         assertArrayEquals(expected, rasterized.maskZx)
     }
 
     private fun assertIntQuadrilateralRasterization(p1: BlockPos.HorPoint, p2: BlockPos.HorPoint, p3: BlockPos.HorPoint, p4: BlockPos.HorPoint,
                                                     minX: Int, minZ: Int, maxX: Int, maxZ: Int, expected: Array<BooleanArray>) {
         val shell = listOf(p1, p2, p3, p4)
-        val polygon = Polygon(outerShellPolygonCorners = shell, polygonCornersOfHoles = emptyList())
+        val polygon = Polygon(outerShellVertices = shell, holesVertices = emptyList())
         val min = HorPos(x = minX, z = minZ)
-        val rasterized = polygon.rasterize(canvas = HorPosRect(min = min, max = HorPos(maxX, maxZ)), cropFirst = false)
-        assertEquals(min, rasterized.origin)
+        val rasterized = polygon.createRasterMask(canvas = HorPosRect(min = min, max = HorPos(maxX, maxZ)), cropFirst = false)
+        assertEquals(min, rasterized!!.origin)
         assertArrayEquals(expected, rasterized.maskZx)
     }
 
