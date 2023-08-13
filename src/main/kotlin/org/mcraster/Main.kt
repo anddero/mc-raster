@@ -40,6 +40,20 @@ import org.mcraster.reader.ShapefileReader
 import java.io.File
 import kotlin.math.roundToInt
 
+fun printPolygons() {
+    ShapefileReader.readPolygonsFromShpFileLEstYx(File("input-resources/customArea1/waterbody.shp"))
+        .use { multiPolygonSeq ->
+            val multiPolygons = multiPolygonSeq.toList()
+            println("N=${multiPolygons.size}" +
+                    ", minParts=${multiPolygons.minBy { it.polygons.size }.polygons.size}" +
+                    ", maxParts=${multiPolygons.maxBy { it.polygons.size }.polygons.size}" +
+                    ", avgParts=${multiPolygons.map { it.polygons.size }.sum() / multiPolygons.size.toFloat()}}"
+            )
+        }
+}
+
+// TODO Update README with a working terrain example and instructions on how to set up
+// TODO BUG: Water currently not visible in game
 fun main() = singleWindowApplication {
     MaterialTheme {
         val (view, setView) = remember { mutableStateOf(View.Main) }
@@ -59,7 +73,7 @@ private enum class View {
 private fun viewMain(setView: (View) -> Unit) {
     Column(Modifier.fillMaxSize(), Arrangement.spacedBy(5.dp)) {
         buttonCenter("Generate Custom Area 1") { generateCustomArea1() }
-//        buttonCenter("Print Polygons") { printPolygons() }
+        buttonCenter("Print Polygons") { printPolygons() }
         buttonCenter("Print Current Thread") { println("Current Thread: ${Thread.currentThread().name}") }
         buttonCenter("Draw 3D Object") { setView(View.Draw3d) }
     }
