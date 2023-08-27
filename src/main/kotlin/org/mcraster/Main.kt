@@ -44,9 +44,9 @@ import java.time.LocalDateTime
 import kotlin.math.roundToInt
 
 fun printPolygons() {
-    ShapefileReader.readPolygonsFromShpFileLEstYx(File("input-resources/customArea1/waterbody.shp"))
+    ShapefileReader.lazyReadShpPolygonsLestYx(File("input-resources/customArea1/waterbody.shp"))
         .use { multiPolygonSeq ->
-            val multiPolygons = multiPolygonSeq.toList()
+            val multiPolygons = multiPolygonSeq.take(10).toList()
             println("N=${multiPolygons.size}" +
                     ", minParts=${multiPolygons.minBy { it.polygons.size }.polygons.size}" +
                     ", maxParts=${multiPolygons.maxBy { it.polygons.size }.polygons.size}" +
