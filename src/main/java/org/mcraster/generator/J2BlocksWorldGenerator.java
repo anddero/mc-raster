@@ -14,7 +14,6 @@ import net.morbz.minecraft.world.DefaultLayers;
 import net.morbz.minecraft.world.World;
 import org.mcraster.model.DiskBoundModel;
 import org.mcraster.model.BlockType;
-import org.mcraster.world.WorldConfig;
 
 import java.io.IOException;
 import java.util.Optional;
@@ -25,27 +24,27 @@ Not working with Minecraft Release 1.13 and many later versions, not all have be
 */
 public class J2BlocksWorldGenerator {
 
-    public static void generateToDisk(WorldConfig worldConfig, DiskBoundModel diskBoundModel) throws IOException {
+    public static void generateToDisk(J2BlocksWorldConfig worldConfig, DiskBoundModel diskBoundModel) throws IOException {
         World world = createWorld(worldConfig);
         buildWorld(diskBoundModel, world);
         world.save();
     }
 
-    private static World createWorld(WorldConfig worldConfig) {
+    private static World createWorld(J2BlocksWorldConfig worldConfig) {
         DefaultLayers layers = new DefaultLayers();
-        if (worldConfig.getLayers().isEmpty()) throw new RuntimeException("No layers defined");
-        worldConfig.getLayers().forEach(
+        if (worldConfig.layers().isEmpty()) throw new RuntimeException("No layers defined");
+        worldConfig.layers().forEach(
                 layer -> layers.setLayers(layer.getYMin(), layer.getYMax(), getMaterial(layer.getBlockType()))
         );
-        IGenerator generator = switch (worldConfig.getGenerator()) {
+        IGenerator generator = switch (worldConfig.generator()) {
             case FLAT -> new FlatGenerator(layers);
         };
-        Level level = new Level(worldConfig.getWorldName(), generator);
-        level.setGameType(getGameType(worldConfig.getGameType()));
+        Level level = new Level(worldConfig.worldName(), generator);
+        level.setGameType(getGameType(worldConfig.gameType()));
         level.setSpawnPoint(
-                worldConfig.getSpawnPos().getX(),
-                worldConfig.getSpawnPos().getY(),
-                worldConfig.getSpawnPos().getZ()
+                worldConfig.spawnPos().getX(),
+                worldConfig.spawnPos().getY(),
+                worldConfig.spawnPos().getZ()
         );
         level.setMapFeatures(worldConfig.isGeneratingStructuresEnabled());
 
@@ -91,7 +90,7 @@ public class J2BlocksWorldGenerator {
         };
     }
 
-    private static GameType getGameType(WorldConfig.GameType gameType) {
+    private static GameType getGameType(org.mcraster.builder.GameType gameType) {
         return switch (gameType) {
             case CREATIVE -> GameType.CREATIVE;
         };

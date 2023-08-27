@@ -6,6 +6,7 @@ data class BuildConfig(
     val modelAndWorldName: String,
     val relativeInputDir: String = "",
     val relativeOutputDir: String,
+    val removeOldModelIfPresent: Boolean,
     val builderMaxCacheSizeMbWhileWriting: Int,
     val builderMaxCacheSizeMbWhileReading: Int,
     val generator: GeneratorType,
