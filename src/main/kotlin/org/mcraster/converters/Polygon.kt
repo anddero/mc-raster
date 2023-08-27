@@ -3,25 +3,26 @@ package org.mcraster.converters
 import org.locationtech.jts.geom.GeometryCollection
 import org.mcraster.model.BlockPos.HorPoint
 import org.mcraster.model.BlockPos.HorPointRect
-import org.mcraster.model.BlockPos.HorPos
-import org.mcraster.model.BlockPos.HorPosRect
+import org.mcraster.model.BlockPos.HorBlockPos
+import org.mcraster.model.BlockPos.HorBlockPosRect
 import org.mcraster.util.JtsUtil.JtsPolygonUtil.getHolesVertices
 import org.mcraster.util.JtsUtil.JtsPolygonUtil.getOuterShellVertices
 import org.mcraster.util.JtsUtil.JtsPolygonUtil.makeZeroCenterJtsPolygon
 import org.mcraster.util.JtsUtil.JtsPolygonUtil.toZeroCenterJtsPolygon
-import org.mcraster.util.NumberUtils.roundDownToIntExact
+import org.mcraster.util.NumberUtils.floorToIntExact
 import java.awt.geom.Area
 import java.math.BigDecimal
+import kotlin.math.min
 import org.locationtech.jts.geom.Polygon as JtsPolygon
 
-class Polygon(
+class Polygon( // TODO Overkill amount of processing. Just simply wrap jts polygon, can even hold LEst97 coordinates and convert in the end, when necessary
     outerShellVertices: List<HorPoint>,
     holesVertices: List<List<HorPoint>>
 ) {
 
     class MultiPolygon(val polygons: List<Polygon>)
 
-    class PolygonRasterMask(val origin: HorPos, val maskZx: Array<BooleanArray>): Iterator<HorPos> { // TODO Test iterator
+    class PolygonRasterMask(val origin: HorBlockPos, val maskZx: Array<BooleanArray>): Iterator<HorBlockPos> { // TODO Test iterator
         private var nextZ = 0
         private var nextX = 0
 
@@ -38,9 +39,9 @@ class Polygon(
             }
         }
 
-        override fun next(): HorPos {
+        override fun next(): HorBlockPos {
             if (!hasNext()) throw RuntimeException("No next element")
-            return HorPos(x = origin.x + nextX++, z = origin.z + nextZ)
+            return HorBlockPos(x = origin.x + nextX++, z = origin.z + nextZ)
         }
     }
 
@@ -52,7 +53,7 @@ class Polygon(
      * TODO We lose some accuracy due to rounding all coordinates down to Int before rasterization.
      *  The ideal solution should rasterize with BigDecimal coordinates directly.
      */
-    fun createRasterMask(canvas: HorPosRect, cropFirst: Boolean): PolygonRasterMask? { // TODO Also test with cropFirst=true
+    fun createRasterMask(canvas: HorBlockPosRect, cropFirst: Boolean): PolygonRasterMask? { // TODO Also test with cropFirst=true
         val lenX = canvas.max.x - canvas.min.x
         val lenZ = canvas.max.z - canvas.min.z
         if (lenX <= 0 || lenZ <= 0) throw RuntimeException("Invalid canvas size: $canvas")
@@ -66,21 +67,21 @@ class Polygon(
         return rasterized?.run { PolygonRasterMask(origin = canvas.min, maskZx = this) }
     }
 
-    private fun createRasterMaskNoCrop(canvas: HorPosRect): Array<BooleanArray> {
+    private fun createRasterMaskNoCrop(canvas: HorBlockPosRect): Array<BooleanArray> {
         val lenX = canvas.max.x - canvas.min.x
         val lenZ = canvas.max.z - canvas.min.z
 
         val outerShell = getOuterShell()
-        val outerX = outerShell.map { it.x.roundDownToIntExact() - canvas.min.x }.toIntArray()
-        val outerZ = outerShell.map { it.z.roundDownToIntExact() - canvas.min.z }.toIntArray()
+        val outerX = outerShell.map { it.x.floorToIntExact() - canvas.min.x }.toIntArray()
+        val outerZ = outerShell.map { it.z.floorToIntExact() - canvas.min.z }.toIntArray()
         val outerPolygon = java.awt.Polygon(outerX, outerZ, outerX.size)
 
         val area = Area(outerPolygon)
 
         val holes = getHoles()
         holes.forEach { hole ->
-            val holeX = hole.map { it.x.roundDownToIntExact() - canvas.min.x }.toIntArray()
-            val holeZ = hole.map { it.z.roundDownToIntExact() - canvas.min.z }.toIntArray()
+            val holeX = hole.map { it.x.floorToIntExact() - canvas.min.x }.toIntArray()
+            val holeZ = hole.map { it.z.floorToIntExact() - canvas.min.z }.toIntArray()
             val holePolygon = java.awt.Polygon(holeX, holeZ, holeX.size)
             area.subtract(Area(holePolygon))
         }
@@ -100,20 +101,21 @@ class Polygon(
      * desired size (canvasSize x canvasSize). Min coordinate inclusive, max coordinate exclusive.
      * This procedure is lazy and returns a LazyData from which the processing of each next canvas may be requested.
      */
-    fun createRasterMasks(area: HorPosRect, canvasSize: Int, cropFirst: Boolean): Sequence<PolygonRasterMask> { // TODO Test
+    fun createRasterMasks(area: HorBlockPosRect, canvasSize: Int, cropFirst: Boolean): Sequence<PolygonRasterMask> { // TODO Test
         if (canvasSize <= 0) throw RuntimeException("Expected positive canvas size, given $canvasSize")
         return (area.min.x until area.max.x step canvasSize)
             .asSequence()
             .flatMap { startX ->
                 (area.min.z until area.max.z step canvasSize)
                     .asSequence()
-                    .map { startZ -> HorPos(x = startX, z = startZ) }
+                    .map { startZ -> HorBlockPos(x = startX, z = startZ) }
             }.map { startPos ->
+                val endPos = HorBlockPos(
+                    x = min(startPos.x + canvasSize, area.max.x),
+                    z = min(startPos.z + canvasSize, area.max.z)
+                )
                 createRasterMask(
-                    canvas = HorPosRect(
-                        min = startPos,
-                        max = HorPos(x = startPos.x + canvasSize, z = startPos.z + canvasSize)
-                    ),
+                    canvas = HorBlockPosRect(min = startPos, max = endPos),
                     cropFirst = cropFirst
                 )
             }.filterNotNull()
