@@ -146,7 +146,6 @@ object WorldBuilder {
 
     private fun LazyData<Polygon.MultiPolygon>.rasterize(bounds: BlockPos.BlockPosCube) = transform { multiPolygons ->
         val area = bounds.toHorBlockPosRect()
-        println("Rasterizing for area $area")
         multiPolygons
             .flatMap { multiPolygon -> multiPolygon.polygons.asSequence() }
             .flatMap { polygon ->
