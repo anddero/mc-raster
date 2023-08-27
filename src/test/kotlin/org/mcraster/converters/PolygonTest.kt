@@ -3,8 +3,8 @@ package org.mcraster.converters
 import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.assertThrows
 import org.mcraster.model.BlockPos
-import org.mcraster.model.BlockPos.HorPos
-import org.mcraster.model.BlockPos.HorPosRect
+import org.mcraster.model.BlockPos.HorBlockPos
+import org.mcraster.model.BlockPos.HorBlockPosRect
 import java.math.BigDecimal
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -224,7 +224,7 @@ class PolygonTest {
          */
         val shell = listOf(p(0.0, 0.0), p(1.0, 0.0), p(1.0, 1.0), p(0.0, 1.0))
         val polygon = Polygon(outerShellVertices = shell, holesVertices = emptyList())
-        val rasterized = polygon.createRasterMask(HorPosRect(HorPos(-1, -1), HorPos(3, 3)), false)
+        val rasterized = polygon.createRasterMask(HorBlockPosRect(HorBlockPos(-1, -1), HorBlockPos(3, 3)), false)
         /**
          *    -1 0 1 2
          * -1  . . . .
@@ -247,7 +247,7 @@ class PolygonTest {
     fun rasterizeTooSmallSquare() {
         val shell = listOf(p(0.0, 0.0), p(0.5, 0.0), p(0.5, 0.5), p(0.0, 0.5))
         val polygon = Polygon(outerShellVertices = shell, holesVertices = emptyList())
-        val rasterized = polygon.createRasterMask(HorPosRect(HorPos(-1, -1), HorPos(3, 3)), false)
+        val rasterized = polygon.createRasterMask(HorBlockPosRect(HorBlockPos(-1, -1), HorBlockPos(3, 3)), false)
         assertArrayEquals(
             arrayOf(
                 booleanArrayOf(false, false, false, false),
@@ -263,7 +263,7 @@ class PolygonTest {
     fun rasterize2x2Square() {
         val shell = listOf(p(0.99, 0.99), p(2.01, 0.99), p(2.01, 2.01), p(0.99, 2.01))
         val polygon = Polygon(outerShellVertices = shell, holesVertices = emptyList())
-        val rasterized = polygon.createRasterMask(HorPosRect(HorPos(-1, -1), HorPos(4, 4)), false)
+        val rasterized = polygon.createRasterMask(HorBlockPosRect(HorBlockPos(-1, -1), HorBlockPos(4, 4)), false)
         assertArrayEquals(
             arrayOf(
                 booleanArrayOf(false, false, false, false, false),
@@ -365,7 +365,7 @@ class PolygonTest {
         val shell = listOf(p(15, 10), p(3,13), p(6,2))
         val hole = listOf(p(10, 9), p(6, 10), p(8, 6))
         val polygon = Polygon(outerShellVertices = shell, holesVertices = listOf(hole))
-        val rasterized = polygon.createRasterMask(canvas = HorPosRect(min = HorPos(x = 2, z = 1), max = HorPos(16, 14)), cropFirst = false)
+        val rasterized = polygon.createRasterMask(canvas = HorBlockPosRect(min = HorBlockPos(x = 2, z = 1), max = HorBlockPos(16, 14)), cropFirst = false)
         assertArrayEquals(
             arrayOf(
                 L(0,0,0,0,0,0,0,0,0,0,0,0,0,0),
@@ -390,7 +390,7 @@ class PolygonTest {
     fun rasterizeOutOfBoundsTriangle() {
         val shell = listOf(p(15, 10), p(3,13), p(6,2))
         val polygon = Polygon(outerShellVertices = shell, holesVertices = emptyList())
-        val rasterized = polygon.createRasterMask(canvas = HorPosRect(min = HorPos(x = 2, z = 5), max = HorPos(12, 14)), cropFirst = false)
+        val rasterized = polygon.createRasterMask(canvas = HorBlockPosRect(min = HorBlockPos(x = 2, z = 5), max = HorBlockPos(12, 14)), cropFirst = false)
         assertArrayEquals(
             arrayOf(
                 L(0,0,0,0,1,1,1,1,0,0),
@@ -411,8 +411,8 @@ class PolygonTest {
                                                minX: Int, minZ: Int, maxX: Int, maxZ: Int, expected: Array<BooleanArray>) {
         val shell = listOf(p1, p2, p3)
         val polygon = Polygon(outerShellVertices = shell, holesVertices = emptyList())
-        val min = HorPos(x = minX, z = minZ)
-        val rasterized = polygon.createRasterMask(canvas = HorPosRect(min = min, max = HorPos(maxX, maxZ)), cropFirst = false)
+        val min = HorBlockPos(x = minX, z = minZ)
+        val rasterized = polygon.createRasterMask(canvas = HorBlockPosRect(min = min, max = HorBlockPos(maxX, maxZ)), cropFirst = false)
         assertEquals(min, rasterized!!.origin)
         assertArrayEquals(expected, rasterized.maskZx)
     }
@@ -421,8 +421,8 @@ class PolygonTest {
                                                     minX: Int, minZ: Int, maxX: Int, maxZ: Int, expected: Array<BooleanArray>) {
         val shell = listOf(p1, p2, p3, p4)
         val polygon = Polygon(outerShellVertices = shell, holesVertices = emptyList())
-        val min = HorPos(x = minX, z = minZ)
-        val rasterized = polygon.createRasterMask(canvas = HorPosRect(min = min, max = HorPos(maxX, maxZ)), cropFirst = false)
+        val min = HorBlockPos(x = minX, z = minZ)
+        val rasterized = polygon.createRasterMask(canvas = HorBlockPosRect(min = min, max = HorBlockPos(maxX, maxZ)), cropFirst = false)
         assertEquals(min, rasterized!!.origin)
         assertArrayEquals(expected, rasterized.maskZx)
     }
