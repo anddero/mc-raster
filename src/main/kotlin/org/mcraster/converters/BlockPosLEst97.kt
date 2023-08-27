@@ -63,6 +63,7 @@ data class BlockPosLEst97(val x: Int, val y: Int, val h: Int) {
             val convertedMin = min.toPoint(seaLevelBlockBottomY = seaLevelBlockBottomY)
             val convertedMax = max.toPoint(seaLevelBlockBottomY = seaLevelBlockBottomY)
             // z is a negated coordinate, so the order of precedence is reversed
+            if (convertedMin.z <= convertedMax.z) throw RuntimeException("Expected Z to be negated after $this conversion, actual values are $convertedMin & $convertedMax")
             return BlockPos.PointCube(
                 min = convertedMin.copy(z = convertedMax.z),
                 max = convertedMax.copy(z = convertedMin.z)
