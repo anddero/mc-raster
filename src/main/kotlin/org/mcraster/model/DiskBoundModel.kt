@@ -4,6 +4,7 @@ import org.mcraster.model.Block.RegionLocalBlock
 import org.mcraster.model.DiskBoundModel.RegionIndex.Companion.regionIndex
 import org.mcraster.model.Limits.DEFAULT_MAX_CACHE_SIZE_MB
 import org.mcraster.model.Limits.DISK_REGION_SIZE_MB_APPROX
+import org.mcraster.model.Limits.isWithinLimits
 import org.mcraster.util.CachedMap
 import org.mcraster.util.StringUtils.intFixedLengthRegex
 import org.mcraster.util.StringUtils.toFixedLengthString
@@ -62,8 +63,17 @@ class DiskBoundModel(private val directory: File, overwrite: Boolean = false) : 
 
     fun getBlock(pos: BlockPos) = regionsByIndex[pos.regionIndex].getBlock(pos = pos)
 
-    fun setBlock(pos: BlockPos, block: BlockType) =
+    /**
+     * Return the highest block height at this horizontal coordinate, or null if there are no blocks.
+     */
+    fun getHighestBlockY(pos: BlockPos.HorBlockPos) = regionsByIndex[pos.regionIndex].getHighestBlockY(pos = pos)
+
+    fun setBlock(pos: BlockPos, block: BlockType) {
+        if (!pos.isWithinLimits()) { // TODO Height is currently a hard limit and should be checked at chunk
+            System.err.println("CRITICAL: setBlock called with $pos and $block which is out of acceptable limits")
+        }
         regionsByIndex[pos.regionIndex].setBlock(pos = pos, value = block)
+    }
 
     /**
      * Save all unsaved changes to disk that have been made so far.
@@ -151,6 +161,7 @@ class DiskBoundModel(private val directory: File, overwrite: Boolean = false) : 
     private data class RegionIndex(val x: Int, val z: Int) {
         companion object {
             val BlockPos.regionIndex get() = RegionIndex(x = this.regionX, z = this.regionZ)
+            val BlockPos.HorBlockPos.regionIndex get() = RegionIndex(x = this.regionX, z = this.regionZ)
         }
     }
 

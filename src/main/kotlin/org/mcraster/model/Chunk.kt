@@ -24,6 +24,18 @@ class Chunk : Iterable<ChunkLocalBlock> {
     fun getBlock(pos: BlockPos) =
         BlockType[blocksXzy.get(i1 = pos.localBlockX, i2 = pos.localBlockZ, i3 = pos.y)]
 
+    /**
+     * Return the highest block height at this horizontal coordinate, or null if there are no blocks.
+     */
+    fun getHighestBlockY(pos: BlockPos.HorBlockPos): Int? {
+        for (y in MODEL_HEIGHT_BLOCKS - 1 downTo 0) {
+            if (blocksXzy.get(i1 = pos.localBlockX, i2 = pos.localBlockZ, i3 = y) != NONE.value) {
+                return y
+            }
+        }
+        return null
+    }
+
     fun setBlock(pos: BlockPos, value: BlockType) =
         blocksXzy.set(i1 = pos.localBlockX, i2 = pos.localBlockZ, i3 = pos.y, value = value.value)
 

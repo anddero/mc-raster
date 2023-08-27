@@ -26,6 +26,14 @@ class Region : Iterable<RegionLocalBlock> {
         return getChunk(pos).getBlock(pos)
     }
 
+    /**
+     * Return the highest block height at this horizontal coordinate, or null if there are no blocks.
+     */
+    fun getHighestBlockY(pos: BlockPos.HorBlockPos): Int? {
+        lastAccessTime = Instant.now()
+        return getChunk(pos).getHighestBlockY(pos)
+    }
+
     fun setBlock(pos: BlockPos, value: BlockType) {
         lastAccessTime = Instant.now()
         val changed = getChunk(pos).setBlock(pos = pos, value = value)
@@ -45,6 +53,7 @@ class Region : Iterable<RegionLocalBlock> {
     }
 
     private fun getChunk(pos: BlockPos) = chunksXz[pos.localChunkX][pos.localChunkZ]
+    private fun getChunk(pos: BlockPos.HorBlockPos) = chunksXz[pos.localChunkX][pos.localChunkZ]
 
     private class BinaryRegionIterator(private val region: Region) : Iterator<RegionLocalBlock> {
         private var localChunkX = 0
