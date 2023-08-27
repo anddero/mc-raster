@@ -7,7 +7,7 @@ import java.io.File
 
 object Obj3dReader {
 
-    fun readFile(file: File) = file.asLazyLines().transform { Obj3dReader(it.iterator()).asSequence() }
+    fun lazyReadObj3d(file: File) = file.asLazyLines().transform { Obj3dReader(it.iterator()).asSequence() }
 
     private class Obj3dReader(private val lineIter: Iterator<String>) : Iterator<BlockPos> {
 

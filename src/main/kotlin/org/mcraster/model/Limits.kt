@@ -33,8 +33,8 @@ object Limits {
     const val DISK_REGION_SIZE_MB_APPROX = DISK_REGION_SIZE_BYTES / 1024 / 1024
     const val DEFAULT_MAX_CACHE_SIZE_MB = 1024
 
-    fun BlockPos.isWithinLimits() = (x in MIN_BLOCK_POS.x..MAX_BLOCK_POS.x &&
+    fun BlockPos.isWithinLimits() = x in MIN_BLOCK_POS.x..MAX_BLOCK_POS.x &&
             y in MIN_BLOCK_POS.y..MAX_BLOCK_POS.y &&
-            z in MIN_BLOCK_POS.z..MAX_BLOCK_POS.z)
+            z in MIN_BLOCK_POS.z..MAX_BLOCK_POS.z
 
 }

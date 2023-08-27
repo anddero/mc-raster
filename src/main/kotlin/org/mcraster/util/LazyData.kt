@@ -15,7 +15,7 @@ import java.io.Closeable
  * called. Instead, data should be loaded as lazily as possible (one by one, or in chunks),
  * balancing between performance and memory use.
  */
-sealed class LazyData<T> {
+sealed class LazyData<T> { // TODO Can prolly get rid of it in favor of raw Sequence
 
     /**
      * Terminal operation. Invoke the given block to consume the sequence of data.
