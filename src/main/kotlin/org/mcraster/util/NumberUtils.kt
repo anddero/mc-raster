@@ -47,7 +47,7 @@ object NumberUtils {
         // If number is exactly an integer, we are done
         if (this.isEqualTo(resultInt)) return this.intValueExact()
         // If number is positive, then removing fractional part rounded down, but we need to round up, so add one
-        if (this.signum() > 0) ++resultInt;
+        if (this.signum() > 0) ++resultInt
         // Check that the original number is in range (result-1, result), otherwise throw
         if (this.isBiggerThan(resultInt - BigInteger.ONE) && this.isSmallerThan(resultInt)) {
             return resultInt.intValueExact()

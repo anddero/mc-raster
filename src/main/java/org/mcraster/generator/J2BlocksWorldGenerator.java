@@ -52,16 +52,15 @@ public class J2BlocksWorldGenerator {
     }
 
     private static void buildWorld(DiskBoundModel diskBoundModel, World world) {
-        diskBoundModel.iterator().forEachRemaining(block -> {
-            getBlock(block.getType()).ifPresent(
-                    iBlock -> world.setBlock(
-                            block.getPos().getX(),
-                            block.getPos().getY(),
-                            block.getPos().getZ(),
-                            iBlock
-                    )
-            );
-        });
+        diskBoundModel.iterator().forEachRemaining(block ->
+                getBlock(block.getType()).ifPresent(iBlock ->
+                        world.setBlock(
+                                block.getPos().getX(),
+                                block.getPos().getY(),
+                                block.getPos().getZ(),
+                                iBlock
+                        )
+                ));
     }
 
     private static Optional<IBlock> getBlock(BlockType blockType) {
