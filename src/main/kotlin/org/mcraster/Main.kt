@@ -36,8 +36,11 @@ import org.mcraster.Obj3dDisplayProps.CANVAS_DIMS
 import org.mcraster.Obj3dDisplayProps.PADDING
 import org.mcraster.Obj3dDisplayProps.PADDING_BORDER
 import org.mcraster.Object3dState.Companion.OBJECT_3D_DIMS
+import org.mcraster.builder.WorldBuilder
+import org.mcraster.reader.ConfigReader
 import org.mcraster.reader.ShapefileReader
 import java.io.File
+import java.time.LocalDateTime
 import kotlin.math.roundToInt
 
 fun printPolygons() {
@@ -52,8 +55,21 @@ fun printPolygons() {
         }
 }
 
+fun generateCustomArea(configFileName: String) {
+    println("Start generating $configFileName at ${LocalDateTime.now()}")
+    runCatching {
+        WorldBuilder.buildWithJ2Blocks(
+            buildConfig = ConfigReader.readConfig(configDir = "input-resources", configFile = configFileName)
+        )
+    }.exceptionOrNull()
+        ?.let { throwable ->
+            System.err.println("--- Throwable caught in generateCustomArea() at ${LocalDateTime.now()} ---")
+            throwable.printStackTrace()
+            System.err.println("--- Throwable End ---")
+        }
+}
+
 // TODO Update README with a working terrain example and instructions on how to set up
-// TODO BUG: Water currently not visible in game
 fun main() = singleWindowApplication {
     MaterialTheme {
         val (view, setView) = remember { mutableStateOf(View.Main) }
@@ -72,7 +88,8 @@ private enum class View {
 @Composable
 private fun viewMain(setView: (View) -> Unit) {
     Column(Modifier.fillMaxSize(), Arrangement.spacedBy(5.dp)) {
-        buttonCenter("Generate Custom Area 1") { generateCustomArea1() }
+        buttonCenter("Generate Custom Area 1") { generateCustomArea("customArea1.yml") }
+        buttonCenter("Generate Custom Area 2") { generateCustomArea("customArea2.yml") }
         buttonCenter("Print Polygons") { printPolygons() }
         buttonCenter("Print Current Thread") { println("Current Thread: ${Thread.currentThread().name}") }
         buttonCenter("Draw 3D Object") { setView(View.Draw3d) }
@@ -252,8 +269,4 @@ private fun viewDraw3dObjCanvas(state: MutableState<Object3dState>) {
 private fun Float.toBoxIndex(): Int {
     val mouseCoordNorm = roundToInt() - PADDING_BORDER
     return if (mouseCoordNorm % (BOX_SIZE + PADDING) < BOX_SIZE) mouseCoordNorm / (BOX_SIZE + PADDING) else -1
-}
-
-fun generateCustomArea1() {
-    LocalTest.generateCustomArea1()
 }

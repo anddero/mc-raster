@@ -40,3 +40,19 @@ object ShapefileReader { // Shapefile (.shp) reading capability
     }
 
 }
+
+/*
+TODO Check if shpfiles may contain useful metadata for better generation
+println(
+    "Read \n\t" +
+            "name: ${sourceGeometry.name}\n\t" +
+            "type: ${sourceGeometry.type}\n\t" +
+            "value: ${sourceGeometry.value}\n\t" +
+            "bounds: ${sourceGeometry.bounds}\n\t" +
+            "descriptor: ${sourceGeometry.descriptor}\n\t" +
+            "identifier: ${sourceGeometry.identifier}\n\t" +
+            "userData: ${sourceGeometry.userData}\n\t" +
+            "sourceGeometry: $sourceGeometry\n\t" *//*+
+            "feature: $feature"*//*
+)
+*/
