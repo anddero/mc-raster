@@ -1,8 +1,8 @@
 package org.mcraster.converters
 
 import org.mcraster.model.BlockPos
-import org.mcraster.util.NumberUtils.roundDownToIntExact
-import org.mcraster.util.NumberUtils.roundToIntHalfUpExact
+import org.mcraster.util.NumberUtils.floorToIntExact
+import org.mcraster.util.NumberUtils.roundToIntExact
 import java.math.BigDecimal
 
 /**
@@ -26,11 +26,21 @@ data class BlockPosLEst97(val x: Int, val y: Int, val h: Int) {
 
     data class PointLEst97(val x: BigDecimal, val y: BigDecimal, val h: BigDecimal) {
 
-        fun getBoundingBlock() =
-            BlockPosLEst97(x = x.roundDownToIntExact(), y = y.roundDownToIntExact(), h = h.roundDownToIntExact())
+        fun toPoint(seaLevelBlockBottomY: Int) = BlockPos.Point(
+            x = y,
+            y = h + seaLevelBlockBottomY.toBigDecimal() + BigDecimal.ONE,
+            z = -x
+        )
 
+        fun getBoundingBlock() =
+            BlockPosLEst97(x = x.floorToIntExact(), y = y.floorToIntExact(), h = h.floorToIntExact())
+
+        /**
+         * Take the bounding block if the height is closer to the top of the block (>= .5).
+         * Take the block below if the height is closer to the bottom of the block (< .5).
+         */
         fun getBoundingHorizontallyButVerticallyRoundedTowardsTopOfBlock() =
-            BlockPosLEst97(x = x.roundDownToIntExact(), y = y.roundDownToIntExact(), h = h.roundToIntHalfUpExact() - 1)
+            BlockPosLEst97(x = x.floorToIntExact(), y = y.floorToIntExact(), h = h.roundToIntExact() - 1)
 
     }
 
@@ -40,6 +50,24 @@ data class BlockPosLEst97(val x: Int, val y: Int, val h: Int) {
             x = y,
             z = -x
         )
+
+    }
+
+    data class PointCubeLEst97(val min: PointLEst97, val max: PointLEst97) {
+
+        init {
+            if (min.x >= max.x || min.y >= max.y || min.h >= max.h) throw RuntimeException("$min >= $max")
+        }
+
+        fun toPointCube(seaLevelBlockBottomY: Int): BlockPos.PointCube {
+            val convertedMin = min.toPoint(seaLevelBlockBottomY = seaLevelBlockBottomY)
+            val convertedMax = max.toPoint(seaLevelBlockBottomY = seaLevelBlockBottomY)
+            // z is a negated coordinate, so the order of precedence is reversed
+            return BlockPos.PointCube(
+                min = convertedMin.copy(z = convertedMax.z),
+                max = convertedMax.copy(z = convertedMin.z)
+            )
+        }
 
     }
 

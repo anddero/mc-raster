@@ -1,5 +1,7 @@
 package org.mcraster.model
 
+import org.mcraster.util.NumberUtils.ceilToIntExact
+import org.mcraster.util.NumberUtils.floorToIntExact
 import java.math.BigDecimal
 
 /**
@@ -30,7 +32,7 @@ data class BlockPos(val x: Int, val y: Int, val z: Int) {
 
     fun plus(dx: Int, dy: Int, dz: Int) = BlockPos(x = x + dx, y = y + dy, z = z + dz)
 
-    fun toHorPos() = HorPos(x = x, z = z)
+    fun toHorBlockPos() = HorBlockPos(x = x, z = z)
 
     companion object {
 
@@ -77,38 +79,63 @@ data class BlockPos(val x: Int, val y: Int, val z: Int) {
 
     }
 
-    data class HorPos(val x: Int, val z: Int) {
+    data class HorBlockPos(val x: Int, val z: Int) {
 
-        fun toHorPoint() = HorPoint(x = x.toBigDecimal(), z = z.toBigDecimal())
+        val regionX get() = getRegionIndex(globalBlockIndex = x)
+        val regionZ get() = getRegionIndex(globalBlockIndex = z)
+
+        val localChunkX get() = getLocalChunkIndex(globalBlockIndex = x)
+        val localChunkZ get() = getLocalChunkIndex(globalBlockIndex = z)
+
+        val localBlockX get() = getLocalBlockIndex(globalBlockIndex = x)
+        val localBlockZ get() = getLocalBlockIndex(globalBlockIndex = z)
+
+        /**
+         * The corner with the smallest x and z of this block.
+         */
+        fun getMin() = HorPoint(x = x.toBigDecimal(), z = z.toBigDecimal())
+
+        /**
+         * The corner with the highest x and z of this block.
+         */
+        fun getMax() = HorPoint(x = (x + 1).toBigDecimal(), z = (z + 1).toBigDecimal())
 
     }
 
-    data class HorPosRect(val min: HorPos, val max: HorPos) {
+    /**
+     * Min inclusive, max exclusive.
+     */
+    data class HorBlockPosRect(val min: HorBlockPos, val max: HorBlockPos) {
 
         init {
             if (min.x >= max.x || min.z >= max.z) throw RuntimeException("$this has no size")
         }
 
-        fun contains(p: HorPos) = p.x >= min.x && p.x <= max.x &&
-                                  p.z >= min.z && p.z <= max.z
+        fun contains(p: HorBlockPos) = p.x >= min.x && p.x < max.x &&
+                                       p.z >= min.z && p.z < max.z
 
-        fun toHorPointRect() = HorPointRect(min = min.toHorPoint(), max = max.toHorPoint())
+        fun toHorPointRect() = HorPointRect(min = min.getMin(), max = max.getMin())
 
     }
 
-    data class Cube(val min: BlockPos, val max: BlockPos) {
+    /**
+     * Min inclusive, max exclusive.
+     */
+    data class BlockPosCube(val min: BlockPos, val max: BlockPos) {
 
         init {
             if (min.x >= max.x || min.z >= max.z || min.y >= max.y) throw RuntimeException("$this has no size")
         }
 
-        fun contains(p: BlockPos) = p.x >= min.x && p.x <= max.x &&
-                                    p.y >= min.y && p.y <= max.y &&
-                                    p.z >= min.z && p.z <= max.z
+        fun contains(p: BlockPos) = p.x >= min.x && p.x < max.x &&
+                                    p.y >= min.y && p.y < max.y &&
+                                    p.z >= min.z && p.z < max.z
 
-        fun toHorPosRect() = HorPosRect(min = min.toHorPos(), max = max.toHorPos())
+        fun toHorBlockPosRect() = HorBlockPosRect(min = min.toHorBlockPos(), max = max.toHorBlockPos())
 
     }
+
+    data class Point(val x: BigDecimal, val y: BigDecimal, val z: BigDecimal)
 
     data class HorPoint(val x: BigDecimal, val z: BigDecimal)
 
@@ -118,8 +145,32 @@ data class BlockPos(val x: Int, val y: Int, val z: Int) {
             if (min.x >= max.x || min.z >= max.z) throw RuntimeException("$this has no size")
         }
 
-        // TODO Why both ends included?
-        fun contains(point: HorPoint) = point.x >= min.x && point.x <= max.x && point.z >= min.z && point.z <= max.z
+        fun contains(point: HorPoint) = point.x >= min.x && point.x < max.x && point.z >= min.z && point.z < max.z
+
+    }
+
+    data class PointCube(val min: Point, val max: Point) {
+
+        init {
+            if (min.x >= max.x || min.z >= max.z || min.y >= max.y) throw RuntimeException("$this has no size")
+        }
+
+        /**
+         * Get the biggest BlockPosCube that could be represented by the bounds of this PointCube.
+         */
+        fun toInnerBlockPosCube(): BlockPosCube {
+            val newMin = BlockPos(
+                x = min.x.ceilToIntExact(),
+                y = min.y.ceilToIntExact(),
+                z = min.z.ceilToIntExact()
+            )
+            val newMax = BlockPos(
+                x = max.x.floorToIntExact(),
+                y = max.y.floorToIntExact(),
+                z = max.z.floorToIntExact()
+            )
+            return BlockPosCube(min = newMin, max = newMax)
+        }
 
     }
 
