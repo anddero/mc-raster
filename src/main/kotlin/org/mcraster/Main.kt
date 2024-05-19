@@ -43,23 +43,11 @@ import java.io.File
 import java.time.LocalDateTime
 import kotlin.math.roundToInt
 
-fun printPolygons() {
-    ShapefileReader.lazyReadShpPolygonsLestYx(File("input-resources/customArea1/waterbody.shp"))
-        .use { multiPolygonSeq ->
-            val multiPolygons = multiPolygonSeq.take(10).toList()
-            println("N=${multiPolygons.size}" +
-                    ", minParts=${multiPolygons.minBy { it.polygons.size }.polygons.size}" +
-                    ", maxParts=${multiPolygons.maxBy { it.polygons.size }.polygons.size}" +
-                    ", avgParts=${multiPolygons.map { it.polygons.size }.sum() / multiPolygons.size.toFloat()}}"
-            )
-        }
-}
-
 fun generateCustomArea(configFileName: String) {
     println("Start generating $configFileName at ${LocalDateTime.now()}")
     runCatching {
         WorldBuilder.buildWithJ2Blocks(
-            buildConfig = ConfigReader.readConfig(configDir = "input-resources", configFile = configFileName)
+            buildConfig = ConfigReader.readConfig(configDir = "input-examples", configFile = configFileName)
         )
     }.exceptionOrNull()
         ?.let { throwable ->
@@ -69,7 +57,6 @@ fun generateCustomArea(configFileName: String) {
         }
 }
 
-// TODO Update README with a working terrain example and instructions on how to set up
 fun main() = singleWindowApplication {
     MaterialTheme {
         val (view, setView) = remember { mutableStateOf(View.Main) }
@@ -88,10 +75,7 @@ private enum class View {
 @Composable
 private fun viewMain(setView: (View) -> Unit) {
     Column(Modifier.fillMaxSize(), Arrangement.spacedBy(5.dp)) {
-        buttonCenter("Generate Custom Area 1") { generateCustomArea("customArea1.yml") }
-        buttonCenter("Generate Custom Area 2") { generateCustomArea("customArea2.yml") }
-        buttonCenter("Print Polygons") { printPolygons() }
-        buttonCenter("Print Current Thread") { println("Current Thread: ${Thread.currentThread().name}") }
+        buttonCenter("Generate Example 1") { generateCustomArea("Example1.yml") }
         buttonCenter("Draw 3D Object") { setView(View.Draw3d) }
     }
 }

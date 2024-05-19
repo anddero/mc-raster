@@ -1,0 +1,67 @@
+# NOTE: SOME OF THE BELOW DATA SOURCES REFERENCED IN THIS CONFIG ARE NOT INCLUDED IN GIT DUE TO LARGE FILE SIZE.
+# NOTE: SEE THE COMMENTS BELOW FOR WHICH ONES ARE MISSING AND NEED TO BE FETCHED MANUALLY.
+modelAndWorldName: Example1
+relativeInputDir: Example1
+relativeOutputDir: output-models
+removeOldModelIfPresent: false
+builderMaxCacheSizeMbWhileWriting: 1024
+builderMaxCacheSizeMbWhileReading: 256
+generator: FLAT
+seaLevelBlockBottomY: 62
+isGeneratingStructuresEnabled: false
+gameType: CREATIVE
+layers:
+  -
+    blockType: UNBREAKABLE_STONE
+    yMin: 0
+    yMax: 0
+  -
+    blockType: STONE
+    yMin: 1
+    yMax: 4
+  -
+    blockType: SOIL
+    yMin: 5
+    yMax: 7
+  -
+    blockType: WATER
+    yMin: 8
+    yMax: 62
+dataSources:
+  - # Spawn point is in the middle of Freedom Square in Tallinn City Center
+    relativeFileName: spawn-lest97-yxh.txt
+    dataType: ORIGIN
+    dataFormat: TEXT_POINT_LEST97_YXH
+  - # Bounds are small for the example for quick generation
+    relativeFileName: bounds-lest97-yxh.txt
+    dataType: BOUNDS
+    dataFormat: TEXT_POINT_LEST97_YXH
+  - # Elevation data as chunks of DEM (1m precision) of the central chunk of Tallinn (block 63843), originally named "63843_dem.xyz" but renamed for clarity.
+    # NOTE: FILE NOT INCLUDED IN GIT! See README on instructions how to fetch this file.
+    relativeFileName: heightmap-63843-lest97-yxh.txt
+    dataType: TERRAIN
+    dataFormat: TEXT_POINT_LEST97_YXH
+  - # Still water bodies of entire Estonia
+    # NOTE: FILE NOT INCLUDED IN GIT! Included in ETAK_Eesti_pohikaart_2021_SHP archive (see README how to fetch this data).
+    relativeFileName: E_202_seisuveekogu_a.shp
+    dataType: WATER
+    dataFormat: SHP_POLYGON_LEST97_YX
+  - # Flowing water bodies of entire Estonia
+    # NOTE: FILE NOT INCLUDED IN GIT! Included in ETAK_Eesti_pohikaart_2021_SHP archive (see README how to fetch this data).
+    relativeFileName: E_203_vooluveekogu_a.shp
+    dataType: WATER
+    dataFormat: SHP_POLYGON_LEST97_YX
+  - # Roads of entire Estonia
+    # NOTE: FILE NOT INCLUDED IN GIT! Included in ETAK_Eesti_pohikaart_2021_SHP archive (see README how to fetch this data).
+    relativeFileName: E_501_tee_a.shp
+    dataType: ROAD
+    dataFormat: SHP_POLYGON_LEST97_YX
+  - # Buildings of entire Estonia
+    # NOTE: FILE NOT INCLUDED IN GIT! Included in ETAK_Eesti_pohikaart_2021_SHP archive (see README how to fetch this data).
+    relativeFileName: E_401_hoone_ka.shp
+    dataType: BUILDING
+    dataFormat: SHP_POLYGON_LEST97_YX
+  - # Small heart shape (drawn with the 3D object drawing tool from UI)
+    relativeFileName: obj3d.dump
+    dataType: MODEL_3D
+    dataFormat: OBJ_3D
