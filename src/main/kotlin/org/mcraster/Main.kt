@@ -38,7 +38,6 @@ import org.mcraster.Obj3dDisplayProps.PADDING_BORDER
 import org.mcraster.Object3dState.Companion.OBJECT_3D_DIMS
 import org.mcraster.builder.WorldBuilder
 import org.mcraster.reader.ConfigReader
-import org.mcraster.reader.ShapefileReader
 import java.io.File
 import java.time.LocalDateTime
 import kotlin.math.roundToInt
