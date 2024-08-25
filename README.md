@@ -2,7 +2,7 @@
 Tools for automatically generating Minecraft worlds from geographic data.
 
 # Prerequisites
-1. J2Blocks tested and working with Minecraft versions: Release 1.10, 1.12, 1.12.2.
+1. J2Blocks (included under libs) tested and working with Minecraft versions: Release 1.10, 1.12, 1.12.2.
    Not working with Minecraft Release 1.13 and many later versions, not all have been tested though.
    Therefore, if you wish to load and play the generated world, make sure to choose one of the supported Minecraft
    versions when launching the game.
