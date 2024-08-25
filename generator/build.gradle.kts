@@ -1,8 +1,9 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.9.22"
-    id("org.jetbrains.compose") version "1.6.0"
+    kotlin("jvm") version "2.0.20"
+    id("org.jetbrains.kotlin.plugin.compose") version "2.0.20"
+    id("org.jetbrains.compose") version "1.6.11"
 }
 
 group = "org.mcraster"
