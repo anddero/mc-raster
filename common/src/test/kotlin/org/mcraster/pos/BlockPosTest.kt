@@ -1,12 +1,12 @@
-package org.mcraster.model
+package org.mcraster.pos
 
-import org.mcraster.model.BlockPos.Companion.getGlobalBlockIndex
-import org.mcraster.model.BlockPos.Companion.getGlobalChunkIndex
-import org.mcraster.model.BlockPos.Companion.getLocalBlockIndex
-import org.mcraster.model.BlockPos.Companion.getLocalChunkIndex
-import org.mcraster.model.BlockPos.Companion.getRegionIndex
-import org.mcraster.model.Limits.CHUNK_LENGTH_BLOCKS
-import org.mcraster.model.Limits.REGION_LENGTH_CHUNKS
+import org.mcraster.pos.BlockPos.Companion.getGlobalBlockIndex
+import org.mcraster.pos.BlockPos.Companion.getGlobalChunkIndex
+import org.mcraster.pos.BlockPos.Companion.getLocalBlockIndex
+import org.mcraster.pos.BlockPos.Companion.getLocalChunkIndex
+import org.mcraster.pos.BlockPos.Companion.getRegionIndex
+import org.mcraster.pos.Limits.CHUNK_LENGTH_BLOCKS
+import org.mcraster.pos.Limits.REGION_LENGTH_CHUNKS
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

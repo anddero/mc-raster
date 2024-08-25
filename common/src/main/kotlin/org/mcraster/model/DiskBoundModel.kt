@@ -2,9 +2,10 @@ package org.mcraster.model
 
 import org.mcraster.model.Block.RegionLocalBlock
 import org.mcraster.model.DiskBoundModel.RegionIndex.Companion.regionIndex
-import org.mcraster.model.Limits.DEFAULT_MAX_CACHE_SIZE_MB
-import org.mcraster.model.Limits.DISK_REGION_SIZE_MB_APPROX
-import org.mcraster.model.Limits.isWithinLimits
+import org.mcraster.pos.Limits.DEFAULT_MAX_CACHE_SIZE_MB
+import org.mcraster.pos.Limits.DISK_REGION_SIZE_MB_APPROX
+import org.mcraster.pos.Limits.isWithinLimits
+import org.mcraster.pos.BlockPos
 import org.mcraster.util.CachedMap
 import org.mcraster.util.StringUtils.intFixedLengthRegex
 import org.mcraster.util.StringUtils.toFixedLengthString

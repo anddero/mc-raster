@@ -2,7 +2,8 @@ package org.mcraster.model
 
 import org.mcraster.model.Block.ChunkLocalBlock
 import org.mcraster.model.Block.RegionLocalBlock
-import org.mcraster.model.Limits.REGION_LENGTH_CHUNKS
+import org.mcraster.pos.Limits.REGION_LENGTH_CHUNKS
+import org.mcraster.pos.BlockPos
 import java.io.InputStream
 import java.io.OutputStream
 import java.time.Instant

@@ -1,10 +1,11 @@
 package org.mcraster.model
 
 import org.mcraster.model.Block.ChunkLocalBlock
-import org.mcraster.model.BlockPos.ChunkLocalBlockPos
+import org.mcraster.pos.BlockPos.ChunkLocalBlockPos
 import org.mcraster.model.BlockType.NONE
-import org.mcraster.model.Limits.CHUNK_LENGTH_BLOCKS
-import org.mcraster.model.Limits.MODEL_HEIGHT_BLOCKS
+import org.mcraster.pos.Limits.CHUNK_LENGTH_BLOCKS
+import org.mcraster.pos.Limits.MODEL_HEIGHT_BLOCKS
+import org.mcraster.pos.BlockPos
 import org.mcraster.util.ByteVec3
 import java.io.InputStream
 import java.io.OutputStream

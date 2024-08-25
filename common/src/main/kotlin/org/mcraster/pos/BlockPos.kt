@@ -1,4 +1,4 @@
-package org.mcraster.model
+package org.mcraster.pos
 
 import org.mcraster.util.NumberUtils.ceilToIntExact
 import org.mcraster.util.NumberUtils.floorToIntExact

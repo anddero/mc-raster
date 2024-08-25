@@ -1,6 +1,6 @@
 package org.mcraster.reader
 
-import org.mcraster.model.BlockPos
+import org.mcraster.pos.BlockPos
 import org.mcraster.util.FileUtils.asLazyLines
 import org.mcraster.util.OptionalUtils.orThrow
 import java.io.File

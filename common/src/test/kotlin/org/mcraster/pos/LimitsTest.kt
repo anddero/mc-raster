@@ -1,5 +1,6 @@
-package org.mcraster.model
+package org.mcraster.pos
 
+import org.mcraster.model.BlockType
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue

@@ -1,6 +1,6 @@
 package org.mcraster.converters
 
-import org.mcraster.model.BlockPos
+import org.mcraster.pos.BlockPos
 import org.mcraster.util.NumberUtils.floorToIntExact
 import org.mcraster.util.NumberUtils.roundToIntExact
 import java.math.BigDecimal

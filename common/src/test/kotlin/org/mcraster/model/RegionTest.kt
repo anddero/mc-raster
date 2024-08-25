@@ -1,14 +1,15 @@
 package org.mcraster.model
 
 import org.mcraster.model.Block.RegionLocalBlock
-import org.mcraster.model.BlockPos.Companion.getGlobalBlockIndex
-import org.mcraster.model.Limits.MODEL_HEIGHT_BLOCKS
-import org.mcraster.model.Limits.CHUNK_LENGTH_BLOCKS
-import org.mcraster.model.Limits.CHUNK_SIZE_BLOCKS
-import org.mcraster.model.Limits.DISK_REGION_SIZE_BYTES
-import org.mcraster.model.Limits.REGION_LENGTH_BLOCKS
-import org.mcraster.model.Limits.REGION_LENGTH_CHUNKS
-import org.mcraster.model.Limits.REGION_SIZE_BLOCKS
+import org.mcraster.pos.BlockPos.Companion.getGlobalBlockIndex
+import org.mcraster.pos.Limits.MODEL_HEIGHT_BLOCKS
+import org.mcraster.pos.Limits.CHUNK_LENGTH_BLOCKS
+import org.mcraster.pos.Limits.CHUNK_SIZE_BLOCKS
+import org.mcraster.pos.Limits.DISK_REGION_SIZE_BYTES
+import org.mcraster.pos.Limits.REGION_LENGTH_BLOCKS
+import org.mcraster.pos.Limits.REGION_LENGTH_CHUNKS
+import org.mcraster.pos.Limits.REGION_SIZE_BLOCKS
+import org.mcraster.pos.BlockPos
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.time.Instant
@@ -75,14 +76,16 @@ internal class RegionTest {
             BlockPos(x = 0, z = 0, y = 1),
             BlockType.SOIL_WITH_GRASS
         )
-        assertEquals(BlockType.SOIL_WITH_GRASS,
+        assertEquals(
+            BlockType.SOIL_WITH_GRASS,
             region.getBlock(BlockPos(x = 0, z = 0, y = 1))
         )
         region.setBlock(
             BlockPos(x = 231, z = 49382, y = 52),
             BlockType.GRAVEL
         )
-        assertEquals(BlockType.GRAVEL,
+        assertEquals(
+            BlockType.GRAVEL,
             region.getBlock(BlockPos(x = 231, z = 49382, y = 52))
         )
     }

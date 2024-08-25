@@ -2,9 +2,9 @@ package org.mcraster.converters
 
 import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.assertThrows
-import org.mcraster.model.BlockPos
-import org.mcraster.model.BlockPos.HorBlockPos
-import org.mcraster.model.BlockPos.HorBlockPosRect
+import org.mcraster.pos.BlockPos
+import org.mcraster.pos.BlockPos.HorBlockPos
+import org.mcraster.pos.BlockPos.HorBlockPosRect
 import java.math.BigDecimal
 import kotlin.test.Test
 import kotlin.test.assertEquals

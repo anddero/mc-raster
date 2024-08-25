@@ -1,4 +1,4 @@
-package org.mcraster.model
+package org.mcraster.pos
 
 object Limits {
 

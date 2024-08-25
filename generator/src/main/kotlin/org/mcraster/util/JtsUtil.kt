@@ -2,8 +2,8 @@ package org.mcraster.util
 
 import org.mcraster.converters.BlockPosLEst97.HorPointLEst97
 import org.mcraster.converters.Polygon
-import org.mcraster.model.BlockPos
-import org.mcraster.model.BlockPos.HorPoint
+import org.mcraster.pos.BlockPos
+import org.mcraster.pos.BlockPos.HorPoint
 import org.mcraster.util.JtsUtil.JtsCoordinateUtil.toZeroCenterJtsCoordinate
 import org.mcraster.util.JtsUtil.JtsLinearRingUtil.getLEstYxVertices
 import org.mcraster.util.JtsUtil.JtsLinearRingUtil.getVertices

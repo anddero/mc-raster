@@ -3,8 +3,8 @@ package org.mcraster.builder
 import org.mcraster.converters.Polygon
 import org.mcraster.generator.J2BlocksWorldConfig
 import org.mcraster.generator.J2BlocksWorldGenerator
-import org.mcraster.model.BlockPos
-import org.mcraster.model.BlockPos.HorBlockPos
+import org.mcraster.pos.BlockPos
+import org.mcraster.pos.BlockPos.HorBlockPos
 import org.mcraster.model.BlockType
 import org.mcraster.model.DiskBoundModel
 import org.mcraster.reader.DataSourceReader.lazyRead3dObjects

@@ -1,7 +1,8 @@
 package org.mcraster.model
 
-import org.mcraster.model.BlockPos.ChunkLocalBlockPos
-import org.mcraster.model.BlockPos.RegionLocalBlockPos
+import org.mcraster.pos.BlockPos
+import org.mcraster.pos.BlockPos.ChunkLocalBlockPos
+import org.mcraster.pos.BlockPos.RegionLocalBlockPos
 
 data class Block(val pos: BlockPos, val type: BlockType) {
 

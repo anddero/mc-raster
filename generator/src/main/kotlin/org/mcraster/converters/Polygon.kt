@@ -1,10 +1,10 @@
 package org.mcraster.converters
 
 import org.locationtech.jts.geom.GeometryCollection
-import org.mcraster.model.BlockPos.HorPoint
-import org.mcraster.model.BlockPos.HorPointRect
-import org.mcraster.model.BlockPos.HorBlockPos
-import org.mcraster.model.BlockPos.HorBlockPosRect
+import org.mcraster.pos.BlockPos.HorPoint
+import org.mcraster.pos.BlockPos.HorPointRect
+import org.mcraster.pos.BlockPos.HorBlockPos
+import org.mcraster.pos.BlockPos.HorBlockPosRect
 import org.mcraster.util.JtsUtil.JtsPolygonUtil.getHolesVertices
 import org.mcraster.util.JtsUtil.JtsPolygonUtil.getOuterShellVertices
 import org.mcraster.util.JtsUtil.JtsPolygonUtil.makeZeroCenterJtsPolygon

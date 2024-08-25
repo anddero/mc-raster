@@ -1,6 +1,7 @@
 package org.mcraster.model
 
-import org.mcraster.model.Limits.MODEL_HEIGHT_BLOCKS
+import org.mcraster.pos.Limits.MODEL_HEIGHT_BLOCKS
+import org.mcraster.pos.BlockPos
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
