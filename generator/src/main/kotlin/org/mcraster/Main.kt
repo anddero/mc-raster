@@ -75,6 +75,7 @@ private enum class View {
 private fun viewMain(setView: (View) -> Unit) {
     Column(Modifier.fillMaxSize(), Arrangement.spacedBy(5.dp)) {
         buttonCenter("Generate Example 1") { generateCustomArea("Example1.yml") }
+        buttonCenter("Generate Example 2") { generateCustomArea("Example2.yml") }
         buttonCenter("Draw 3D Object") { setView(View.Draw3d) }
     }
 }
