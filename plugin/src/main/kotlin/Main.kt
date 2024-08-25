@@ -1,28 +1,19 @@
 package org.mcraster.loader
 
-import io.papermc.paper.command.brigadier.BasicCommand
-import io.papermc.paper.command.brigadier.CommandSourceStack
-import io.papermc.paper.plugin.lifecycle.event.LifecycleEventManager
-import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents
 import net.kyori.adventure.text.Component
 import org.bukkit.Bukkit
+import org.bukkit.command.Command
+import org.bukkit.command.CommandSender
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerJoinEvent
-import org.bukkit.plugin.Plugin
 import org.bukkit.plugin.java.JavaPlugin
 
-@Suppress("unused", // Used by Minecraft server, not by this project
-    "unstableApiUsage") // Everything related to Paper commands is currently marked as unstable
+@Suppress("unused") // Used by Minecraft server, not by this project
 class McRasterLoaderPlugin : JavaPlugin(), Listener {
 
     override fun onEnable() {
         Bukkit.getPluginManager().registerEvents(this, this)
-        val manager: LifecycleEventManager<Plugin> = this.getLifecycleManager()
-        manager.registerEventHandler(LifecycleEvents.COMMANDS) { event ->
-            val commands = event.registrar()
-            commands.register("mc-raster-load", "Load an mc-raster map into the world.", LoadCommand())
-        }
     }
 
     @EventHandler
@@ -30,13 +21,9 @@ class McRasterLoaderPlugin : JavaPlugin(), Listener {
        event.player.sendMessage(Component.text("Hello, " + event.player.name + "! The mc-raster loader plugin is active."))
     }
 
-}
-
-@Suppress("unstableApiUsage") // Everything related to Paper commands is currently marked as unstable
-class LoadCommand : BasicCommand {
-
-    override fun execute(stack: CommandSourceStack, args: Array<out String>?) {
-        stack.sender.sendRichMessage("<rainbow>NOT IMPLEMENTED YET!")
+    override fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<out String>): Boolean {
+        sender.sendRichMessage("<rainbow>COMMAND NOT IMPLEMENTED YET! Called '${command.name}' with label '${label}' and args '${args.joinToString(" ")}'.")
+        return true
     }
 
 }
