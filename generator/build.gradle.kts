@@ -1,8 +1,8 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.9.21"
-    id("org.jetbrains.compose") version "1.5.12"
+    kotlin("jvm") version "1.9.22"
+    id("org.jetbrains.compose") version "1.6.0"
 }
 
 group = "org.mcraster"
@@ -12,6 +12,7 @@ repositories {
     maven { url = uri("https://repo.osgeo.org/repository/release/") }
     mavenCentral()
     maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
+    google()
 }
 
 val geotoolsVersion = "29.2"
