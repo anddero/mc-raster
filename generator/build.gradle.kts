@@ -2,7 +2,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "2.0.20"
+    kotlin("jvm")
     id("org.jetbrains.kotlin.plugin.compose") version "2.0.20"
     id("org.jetbrains.compose") version "1.6.11"
 }
