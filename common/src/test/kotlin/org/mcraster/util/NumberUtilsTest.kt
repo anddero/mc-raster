@@ -35,7 +35,7 @@ internal class NumberUtilsTest { // TODO Test for throw cases
             "10.29381", "10",
             "318718239.1238714192", "318718239",
             "318718239.9238714192", "318718239",
-            "8358128413", "8358128413"
+            "835812841", "835812841"
         )
         for (i in values.indices step 2) {
             assertEquals(values[i + 1], values[i].toBigDecimal().floorToIntExact().toString())
@@ -67,7 +67,7 @@ internal class NumberUtilsTest { // TODO Test for throw cases
             "10.29381", "10",
             "318718239.1238714192", "318718239",
             "318718239.9238714192", "318718240",
-            "8728661843", "8728661843"
+            "872866184", "872866184"
         )
         for (i in values.indices step 2) {
             assertEquals(values[i + 1], values[i].toBigDecimal().roundToIntExact().toString())
@@ -100,7 +100,7 @@ internal class NumberUtilsTest { // TODO Test for throw cases
             "10.29381", "11",
             "318718239.1238714192", "318718240",
             "318718239.9238714192", "318718240",
-            "8358128413", "8358128413"
+            "835812841", "835812841"
         )
         for (i in values.indices step 2) {
             assertEquals(values[i + 1], values[i].toBigDecimal().ceilToIntExact().toString())
