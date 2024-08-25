@@ -12,7 +12,8 @@ import org.bukkit.event.player.PlayerJoinEvent
 import org.bukkit.plugin.Plugin
 import org.bukkit.plugin.java.JavaPlugin
 
-@Suppress("unused") // Used by Minecraft server, not by this project
+@Suppress("unused", // Used by Minecraft server, not by this project
+    "unstableApiUsage") // Everything related to Paper commands is currently marked as unstable
 class McRasterLoaderPlugin : JavaPlugin(), Listener {
 
     override fun onEnable() {
@@ -31,10 +32,11 @@ class McRasterLoaderPlugin : JavaPlugin(), Listener {
 
 }
 
+@Suppress("unstableApiUsage") // Everything related to Paper commands is currently marked as unstable
 class LoadCommand : BasicCommand {
 
     override fun execute(stack: CommandSourceStack, args: Array<out String>?) {
-        stack.sender.sendRichMessage("<rainbow>NOT IMPLEMENTED YET!");
+        stack.sender.sendRichMessage("<rainbow>NOT IMPLEMENTED YET!")
     }
 
 }
