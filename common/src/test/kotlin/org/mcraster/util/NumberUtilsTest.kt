@@ -120,7 +120,7 @@ internal class NumberUtilsTest { // TODO Test for throw cases
             7, 7, 9, 7,
             4, 3, 5, 4,
             -1, -1, 0, -1,
-            -5, -4, -6, -5,
+            -5, -6, -4, -5,
             // take min
             0, 1, 2, 1,
             4, 235, 500, 235,

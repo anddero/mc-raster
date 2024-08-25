@@ -22,6 +22,7 @@ val jtsVersion = "1.19.0"
 val jacksonVersion = "2.15.2"
 dependencies {
     testImplementation(kotlin("test"))
+    implementation(project(":common"))
     implementation(compose.desktop.currentOs)
     implementation("org.geotools:gt-shapefile:$geotoolsVersion")
     implementation("org.locationtech.jts:jts-core:$jtsVersion")

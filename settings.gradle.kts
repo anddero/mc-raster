@@ -10,3 +10,4 @@ pluginManagement {
 
 include("generator")
 include("plugin")
+include("common")
