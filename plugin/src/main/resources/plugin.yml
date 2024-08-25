@@ -1,0 +1,11 @@
+name: McRasterLoaderPlugin
+version: 1.0.0
+main: org.mcraster.loader.McRasterLoaderPlugin
+description: A loader for worlds created by mc-raster.
+author: anddero
+website: https://github.com/anddero/mc-raster
+api-version: '1.21.1'
+commands:
+  command:
+    description: "Load an mc-raster map into the world. Specify the full path to the directory where the map is saved. Warning: blocks will be replaced in-game."
+    usage: "/mc-raster-load <dir>"
