@@ -31,8 +31,13 @@ tasks.test {
     useJUnitPlatform()
 }
 
+java {
+    sourceCompatibility = JavaVersion.VERSION_16
+    targetCompatibility = JavaVersion.VERSION_16
+}
+
 tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "11"
+    kotlinOptions.jvmTarget = "16"
 }
 
 compose.desktop {
