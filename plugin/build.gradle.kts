@@ -15,6 +15,8 @@ repositories {
 
 dependencies {
     testImplementation(kotlin("test"))
+    implementation(project(":common"))
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
     compileOnly("io.papermc.paper:paper-api:1.21.1-R0.1-SNAPSHOT")
 }
 
@@ -33,21 +35,11 @@ tasks {
         compilerOptions.jvmTarget.set(JvmTarget.JVM_21)
     }
 
-    register<Jar>("fatJar") {
-        archiveBaseName.set("mc-raster-loader")
-        from(sourceSets.main.get().output)
-        from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
-        dependsOn(getByName("build"))
-    }
-
-    named("build") {
-        finalizedBy(named("fatJar"))
-    }
-
     jar {
         archiveBaseName.set("mc-raster-loader")
         from(sourceSets.main.get().output)
         from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE // Without it, got error when building
     }
 
 }

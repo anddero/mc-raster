@@ -30,7 +30,7 @@ import java.util.zip.GZIPOutputStream
  * The disk is not updated immediately after every change, make sure to call flush() to ensure all changes reach the
  * disk.
  */
-class DiskBoundModel(private val directory: File, overwrite: Boolean = false) : Iterable<Block> {
+class DiskBoundModel(private val directory: File, overwrite: Boolean) : Iterable<Block> {
 
     private val regionsByIndex = object : CachedMap<RegionIndex, Region>(DEFAULT_MAX_CACHE_SIZE_MB) {
         override fun getCacheLineSizeMB() = DISK_REGION_SIZE_MB_APPROX
