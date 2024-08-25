@@ -1,3 +1,4 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
@@ -38,8 +39,8 @@ java {
     targetCompatibility = JavaVersion.VERSION_16
 }
 
-tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "16"
+tasks.withType<KotlinCompile>().configureEach {
+    compilerOptions.jvmTarget.set(JvmTarget.JVM_16)
 }
 
 compose.desktop {
