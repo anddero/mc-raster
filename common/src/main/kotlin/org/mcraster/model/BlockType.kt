@@ -14,11 +14,9 @@ enum class BlockType(val value: Byte) {
     UNBREAKABLE_STONE(10);
 
     companion object {
-        private val BLOCK_TYPES = BlockType.values()
+        val MAX_BINARY_VALUE = entries.maxOf { it.value }
+        val MIN_BINARY_VALUE = entries.minOf { it.value }
 
-        val MAX_BINARY_VALUE = BLOCK_TYPES.maxOf { it.value }
-        val MIN_BINARY_VALUE = BLOCK_TYPES.minOf { it.value }
-
-        operator fun get(index: Byte) = BLOCK_TYPES[index.toInt()]
+        operator fun get(index: Byte) = entries[index.toInt()]
     }
 }
