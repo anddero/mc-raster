@@ -45,6 +45,8 @@ import kotlin.math.roundToInt
 fun generateCustomArea(configFileName: String) {
     println("Start generating $configFileName at ${LocalDateTime.now()}")
     runCatching {
+        // TODO Enable skipping J2Blocks and just generate model.
+        // TODO Print basic stats like generated world bounds, number of written blocks, etc.
         WorldBuilder.buildWithJ2Blocks(
             buildConfig = ConfigReader.readConfig(configDir = "input-examples", configFile = configFileName)
         )

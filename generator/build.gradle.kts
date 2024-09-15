@@ -26,7 +26,7 @@ dependencies {
     implementation(compose.desktop.currentOs)
     implementation("org.geotools:gt-shapefile:$geotoolsVersion")
     implementation("org.locationtech.jts:jts-core:$jtsVersion")
-    implementation(files("libs/J2Blocks.jar"))
+    implementation(files("libs/J2Blocks.jar")) // TODO Allow omitting the J2Blocks dependency, and not generating Minecraft world at all
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:$jacksonVersion")
 }
@@ -46,6 +46,6 @@ tasks.withType<KotlinCompile>().configureEach {
 
 compose.desktop {
     application {
-        mainClass = "MainKt"
+        mainClass = "org.mcraster.MainKt"
     }
 }

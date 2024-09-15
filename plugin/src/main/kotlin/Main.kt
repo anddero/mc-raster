@@ -25,6 +25,8 @@ import org.mcraster.util.OptionalUtils.orThrow
 import java.util.*
 import java.util.concurrent.CancellationException
 
+// TODO Measure perf diff between plugin loader (online generation) and J2Blocks (offline generation).
+// TODO Measure speed of custom binary model generation, and different parts of the input data loading.
 @Suppress("unused") // Used by Minecraft server, not by this project
 class McRasterLoaderPlugin : JavaPlugin(), Listener {
 
@@ -72,7 +74,7 @@ class McRasterLoaderPlugin : JavaPlugin(), Listener {
             val model = DiskBoundModel(File(directory), false)
             var running = true
             // TODO Extract the magic number 1024*1024, also make it slightly smaller like 1024*256 so the server wouldn't jump back so much while processing
-            for ((index, blocks) in model.asSequence().chunked(1024 * 1024).withIndex()) {
+            for ((index, blocks) in model.asSequence().chunked(1024 * 256).withIndex()) {
                 if (!running) break
                 println("Schedule processing of chunk $index...")
                 val id = Bukkit.getScheduler().scheduleSyncDelayedTask(this@McRasterLoaderPlugin, blocksSetterJob(blocks, world, index))
@@ -125,7 +127,7 @@ class McRasterLoaderPlugin : JavaPlugin(), Listener {
                 BlockType.GLASS -> Optional.of(Material.GLASS)
                 BlockType.AIR -> Optional.of(Material.AIR)
                 BlockType.UNBREAKABLE_STONE -> Optional.of(Material.BEDROCK)
-                else -> Optional.empty()
+                else -> throw RuntimeException("Unhandled BlockType: $this")
             }
         }
 
