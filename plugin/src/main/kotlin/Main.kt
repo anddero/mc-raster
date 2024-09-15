@@ -73,8 +73,8 @@ class McRasterLoaderPlugin : JavaPlugin(), Listener {
             // TODO Will open any directory given, creating it if it doesn't exist, and report that loading succeeded. This is not desired, "DiskBoundModel" should have a read-only mode which should fail if the world doesn't exist.
             val model = DiskBoundModel(File(directory), false)
             var running = true
-            // TODO Extract the magic number 1024*1024, also make it slightly smaller like 1024*256 so the server wouldn't jump back so much while processing
-            for ((index, blocks) in model.asSequence().chunked(1024 * 256).withIndex()) {
+            // TODO Extract the magic number 1024*64
+            for ((index, blocks) in model.asSequence().chunked(1024 * 64).withIndex()) {
                 if (!running) break
                 println("Schedule processing of chunk $index...")
                 val id = Bukkit.getScheduler().scheduleSyncDelayedTask(this@McRasterLoaderPlugin, blocksSetterJob(blocks, world, index))
@@ -85,7 +85,7 @@ class McRasterLoaderPlugin : JavaPlugin(), Listener {
                         break
                     }
                     try {
-                        delay(1L)
+                        delay(2L)
                     } catch (e: CancellationException) {
                         println("Job cancelled while sleeping (${e.message}), gracefully skipping unprocessed blocks")
                         running = false
