@@ -13,22 +13,21 @@ repositories {
     maven("https://repo.papermc.io/repository/maven-public/")
 }
 
+// Security: force safe versions of vulnerable transitive dependencies across all configurations
+// CVE-2025-67030: plexus-utils < 4.0.3 - directory traversal in extractFile (via paper-api)
+// CVE-2025-48924: commons-lang3 < 3.18.0 - uncontrolled recursion in ClassUtils.getClass (via paper-api)
+configurations.all {
+    resolutionStrategy {
+        force("org.codehaus.plexus:plexus-utils:4.0.3")
+        force("org.apache.commons:commons-lang3:3.18.0")
+    }
+}
+
 dependencies {
     testImplementation(kotlin("test"))
     implementation(project(":common"))
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
     compileOnly("io.papermc.paper:paper-api:1.21.1-R0.1-SNAPSHOT")
-    // Security: force safe versions of vulnerable transitive dependencies
-    constraints {
-        // CVE-2025-67030: Directory traversal vulnerability in extractFile method, fixed in 4.0.3
-        implementation("org.codehaus.plexus:plexus-utils:4.0.3") {
-            because("CVE-2025-67030: Directory traversal vulnerability in extractFile method, fixed in 4.0.3")
-        }
-        // CVE-2025-48924: StackOverflowError vulnerability fixed in 3.18.0
-        implementation("org.apache.commons:commons-lang3:3.18.0") {
-            because("CVE-2025-48924: Uncontrolled recursion in ClassUtils.getClass fixed in 3.18.0")
-        }
-    }
 }
 
 java {

@@ -20,6 +20,19 @@ repositories {
 val geotoolsVersion = "29.2"
 val jtsVersion = "1.19.0"
 val jacksonVersion = "2.18.6"
+
+// Security: force safe versions of vulnerable transitive dependencies across all configurations
+// CVE-2025-48924: commons-lang3 < 3.18.0 - uncontrolled recursion in ClassUtils.getClass (via gt-shapefile)
+// WS-2026-0003:  jackson-core < 2.18.x - async parser DoS (via gt-shapefile)
+configurations.all {
+    resolutionStrategy {
+        force("org.apache.commons:commons-lang3:3.18.0")
+        force("com.fasterxml.jackson.core:jackson-core:$jacksonVersion")
+        force("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
+        force("com.fasterxml.jackson.core:jackson-annotations:$jacksonVersion")
+    }
+}
+
 dependencies {
     testImplementation(kotlin("test"))
     implementation(project(":common"))
@@ -29,12 +42,6 @@ dependencies {
     implementation(files("libs/J2Blocks.jar"))
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:$jacksonVersion")
-    // Security: CVE-2025-48924 - commons-lang3 < 3.18.0 is vulnerable to uncontrolled recursion
-    constraints {
-        implementation("org.apache.commons:commons-lang3:3.18.0") {
-            because("CVE-2025-48924: StackOverflowError vulnerability fixed in 3.18.0")
-        }
-    }
 }
 
 tasks.test {
