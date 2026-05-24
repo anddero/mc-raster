@@ -18,6 +18,17 @@ dependencies {
     implementation(project(":common"))
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
     compileOnly("io.papermc.paper:paper-api:1.21.1-R0.1-SNAPSHOT")
+    // Security: force safe versions of vulnerable transitive dependencies
+    constraints {
+        // CVE-2025-67030: Directory traversal vulnerability in extractFile method, fixed in 4.0.3
+        implementation("org.codehaus.plexus:plexus-utils:4.0.3") {
+            because("CVE-2025-67030: Directory traversal vulnerability in extractFile method, fixed in 4.0.3")
+        }
+        // CVE-2025-48924: StackOverflowError vulnerability fixed in 3.18.0
+        implementation("org.apache.commons:commons-lang3:3.18.0") {
+            because("CVE-2025-48924: Uncontrolled recursion in ClassUtils.getClass fixed in 3.18.0")
+        }
+    }
 }
 
 java {
