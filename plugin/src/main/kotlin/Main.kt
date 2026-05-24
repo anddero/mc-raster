@@ -25,8 +25,7 @@ import org.mcraster.util.OptionalUtils.orThrow
 import java.util.*
 import java.util.concurrent.CancellationException
 
-// TODO Measure perf diff between plugin loader (online generation) and J2Blocks (offline generation).
-// TODO Measure speed of custom binary model generation, and different parts of the input data loading.
+
 @Suppress("unused") // Used by Minecraft server, not by this project
 class McRasterLoaderPlugin : JavaPlugin(), Listener {
 
